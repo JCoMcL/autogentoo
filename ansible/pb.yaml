@@ -1,0 +1,5 @@
+---
+- hosts: all
+  tasks:
+    - name: bruh
+      ansible.builtin.import_tasks: tasks/passwordless-ssh.yaml

@@ -31,13 +31,23 @@ currently-running:
 resume-background: not-currently-running | img1.cow
 	${QEMU_CMD} -cdrom ${ISO} -nographic -monitor unix:qemu.sock,server,nowait $| -loadvm boot &
 
-close-background: qemu.sock
+stop: qemu.sock
 	echo quit | socat - ./$<
 
+%/:
+	mkdir -p $@
+ssh/key: ssh/
+	ssh-keygen -t ed25519 -qN '' -f $@
+ssh/key.pub: ssh/key
+copy-id: ssh/key.pub
+	ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1 ansible #TODO patch in sshpass to remove password prompt
+
+#ANSIBLE SECTION
+
+ansible/host: ssh/key
+	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
+
 clean:
-	pgrep -F qemu_pid || rm -f qemu_pid
+	rm -rf blank.raw img1.cow ssh ansible/host
 
-reset: clean
-	rm -f blank.raw img1.cow img1.cow.boot
-
-.PHONY: setup resume resume-background close-background clean reset currently-running not-currently-running
+.PHONY: setup resume resume-background stop clean reset currently-running not-currently-running
