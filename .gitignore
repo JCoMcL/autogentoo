@@ -6,3 +6,6 @@
 *.sock
 *.iso
 stages/
+ssh-wrapper
+ansible/host
+ssh/
