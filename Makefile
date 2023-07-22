@@ -10,7 +10,6 @@ QEMU_CMD = qemu-system-${ARCH} -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::
 %/:
 	mkdir -p $@
 
-
 blank.raw:
 	qemu-img create -f raw $@ ${DISK_SIZE}
 
@@ -20,7 +19,7 @@ img1.cow: blank.raw
 boot.iso:
 	wget ${ISO_URL} -O $@
 
-ssh-wrapper/ssh: ssh-wrapper/
+ssh-wrapper/ssh: | ssh-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
@@ -36,8 +35,8 @@ stages/00-sshd: ssh-wrapper/ssh boot.iso | img1.cow not-currently-running
 
 	${MAKE} stop
 
-stages/%: stages/ | qemu.sock
-	echo savevm  | socat - ./$|
+stages/%: | stages/ qemu.sock
+	echo savevm  | socat - ./qemu.sock
 	touch $@
 
 not-currently-running:
@@ -55,7 +54,7 @@ resume: not-currently-running | stages/00-sshd
 stop: qemu.sock
 	echo quit | socat - ./$<
 
-ssh/key: ssh/
+ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
 ssh/key.pub: ssh/key
 copy-id: ssh/key.pub ssh-wrapper/ssh | currently-running
