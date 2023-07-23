@@ -24,6 +24,7 @@ ssh-wrapper/ssh: | ssh-wrapper/
 	chmod +x $@
 
 stages/00-sshd: ssh-wrapper/ssh boot.iso | img1.cow stages/
+	${MAKE} not-currently-running || ${MAKE} stop
 	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
@@ -44,17 +45,20 @@ not-currently-running:
 
 currently-running:
 	test -S qemu.sock
+	pgrep qemu
 
 resume-%: stages/%
 	${MAKE} currently-running && \
 	echo loadvm $* | socat - ./qemu.sock || \
 	${QEMU_CMD} -nographic img1.cow -loadvm $* &
+	sleep 3 #FIXME
 
 resume: not-currently-running | stages/00-sshd
 	${MAKE} resume-`ls stages | tail -n 1`
 
-stop: qemu.sock
-	echo quit | socat - ./$<
+stop: currently-running
+	echo quit | socat - ./qemu.sock || \
+	( test "`pgrep qemu | wc -l`" -eq 1 && kill `pgrep qemu` )
 
 ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
