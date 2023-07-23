@@ -23,8 +23,8 @@ ssh-wrapper/ssh: | ssh-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
-stages/00-sshd: ssh-wrapper/ssh boot.iso | img1.cow not-currently-running
-	${QEMU_CMD} -boot order=d -drive file=$|,format=qcow2 &
+stages/00-sshd: ssh-wrapper/ssh boot.iso | img1.cow stages/
+	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
@@ -36,16 +36,18 @@ stages/00-sshd: ssh-wrapper/ssh boot.iso | img1.cow not-currently-running
 	${MAKE} stop
 
 stages/%: | stages/ qemu.sock
-	echo savevm  | socat - ./qemu.sock
+	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
 
 not-currently-running:
-	! ls qemu.sock
+	! ${MAKE} currently-running
 
 currently-running:
-	ls qemu.sock
+	test -S qemu.sock
 
-resume-%: not-currently-running | stages/%
+resume-%: stages/%
+	${MAKE} currently-running && \
+	echo loadvm $* | socat - ./qemu.sock || \
 	${QEMU_CMD} -nographic img1.cow -loadvm $* &
 
 resume: not-currently-running | stages/00-sshd
@@ -57,8 +59,12 @@ stop: qemu.sock
 ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
 ssh/key.pub: ssh/key
-copy-id: ssh/key.pub ssh-wrapper/ssh | currently-running
+
+stages/01-ssh-key: ssh/key.pub ssh-wrapper/ssh resume-00-sshd
 	env PATH="ssh-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
+	# save and create the save flag. TODO abstract this out
+	echo savevm $(@F) | socat - ./qemu.sock
+	touch $@
 
 #ANSIBLE SECTION
 
