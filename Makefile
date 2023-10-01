@@ -23,7 +23,10 @@ ssh-wrapper/ssh: | ssh-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
-stages/00-sshd: ssh-wrapper/ssh boot.iso | img1.cow stages/
+sendkeys.rb:
+	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 644 /dev/stdin sendkey.rb
+
+stages/00-sshd: ssh-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
 	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
@@ -76,6 +79,6 @@ ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
 clean:
-	rm -rf blank.raw img1.cow stages ssh ssh-wrapper ansible/host #boot.iso
+	rm -rf blank.raw img1.cow stages ssh ssh-wrapper ansible/host sendkeys.rb #boot.iso
 
 .PHONY: resume resume-% stop clean reset currently-running not-currently-running
