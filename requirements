@@ -1,0 +1,8 @@
+openssh
+sshpass
+# virtualisation
+wget
+qemu
+socat
+procps # provides pgrep
+ruby
