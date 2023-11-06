@@ -10,3 +10,4 @@ ssh-wrapper
 ansible/host
 ssh/
 sendkey.rb
+sendkeys.rb

@@ -24,7 +24,7 @@ ssh-wrapper/ssh: | ssh-wrapper/
 	chmod +x $@
 
 sendkeys.rb:
-	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 644 /dev/stdin sendkey.rb
+	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 655 /dev/stdin sendkeys.rb
 
 stages/00-sshd: ssh-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
