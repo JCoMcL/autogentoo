@@ -19,14 +19,17 @@ img1.cow: blank.raw
 boot.iso:
 	wget ${ISO_URL} -O $@
 
-ssh-wrapper/ssh: | ssh-wrapper/
+sshpass-wrapper/ssh: | sshpass-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
+	chmod +x $@
+ssh-wrapper/ssh: | ssh-wrapper/
+	echo -e "#!/usr/bin/env sh\nssh -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" root@127.0.0.1 '$$@' > $@
 	chmod +x $@
 
 sendkeys.rb:
-	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 655 /dev/stdin sendkeys.rb
+	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 555 /dev/stdin sendkeys.rb
 
-stages/00-sshd: ssh-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
+stages/00-sshd: sshpass-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
 	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
@@ -67,8 +70,8 @@ ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
 ssh/key.pub: ssh/key
 
-stages/01-ssh-key: ssh/key.pub ssh-wrapper/ssh resume-00-sshd
-	env PATH="ssh-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
+stages/01-ssh-key: ssh/key.pub sshpass-wrapper/ssh resume-00-sshd
+	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
@@ -79,6 +82,6 @@ ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
 clean:
-	rm -rf blank.raw img1.cow stages ssh ssh-wrapper ansible/host sendkeys.rb #boot.iso
+	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb #boot.iso
 
 .PHONY: resume resume-% stop clean reset currently-running not-currently-running
