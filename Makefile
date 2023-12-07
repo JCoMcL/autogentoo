@@ -23,7 +23,7 @@ sshpass-wrapper/ssh: | sshpass-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 ssh-wrapper/ssh: | ssh-wrapper/
-	echo -e "#!/usr/bin/env sh\nssh -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" root@127.0.0.1 '$$@' > $@
+	echo -e "#!/usr/bin/env sh\n$$(which ssh) -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
 sendkeys.rb:
