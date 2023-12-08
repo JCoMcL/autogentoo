@@ -1,0 +1,2 @@
+- name: Prepare Disks
+  script: ../../scripts/disk-setup.sh
