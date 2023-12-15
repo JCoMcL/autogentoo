@@ -7,6 +7,7 @@ INITIAL_PASSWD = root
 
 QEMU_CMD = qemu-system-${ARCH} -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
+
 %/:
 	mkdir -p $@
 
@@ -27,7 +28,7 @@ ssh-wrapper/ssh: | ssh-wrapper/
 	chmod +x $@
 
 sendkeys.rb:
-	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 555 /dev/stdin sendkeys.rb
+	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 555 /dev/stdin $@
 
 stages/00-sshd: sshpass-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
@@ -42,10 +43,6 @@ stages/00-sshd: sshpass-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
 
 	${MAKE} stop
 
-stages/%: | stages/ qemu.sock
-	echo savevm $(@F) | socat - ./qemu.sock
-	touch $@
-
 not-currently-running:
 	! ${MAKE} currently-running
 
@@ -53,7 +50,8 @@ currently-running:
 	test -S qemu.sock
 	pgrep qemu
 
-resume-%: stages/%
+RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
+$(RESUME): resume-%: | stages/%
 	${MAKE} currently-running && \
 	echo loadvm $* | socat - ./qemu.sock || \
 	${QEMU_CMD} -nographic img1.cow -loadvm $* &
@@ -70,7 +68,8 @@ ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
 ssh/key.pub: ssh/key
 
-stages/01-ssh-key: ssh/key.pub sshpass-wrapper/ssh resume-00-sshd
+stages/01-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/00-sshd
+	${MAKE} resume-00-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
@@ -84,4 +83,4 @@ ansible/host: ssh/key
 clean:
 	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb #boot.iso
 
-.PHONY: resume resume-% stop clean reset currently-running not-currently-running
+.PHONY: resume $(RESUME) stop clean reset currently-running not-currently-running
