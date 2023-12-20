@@ -86,9 +86,12 @@ stage3-amd64-openrc.tar.xz:
 ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
-stages/02-man-idk: stages/01-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
+stages/02-system-unpacked: stages/01-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-01-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
+	# save and create the save flag. TODO abstract this out
+	echo savevm $(@F) | socat - ./qemu.sock
+	touch $@
 
 clean:
 	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb #boot.iso

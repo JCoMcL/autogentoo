@@ -3,10 +3,9 @@
   tasks:
     - name: prepare disks
       script: ../scripts/disk-setup.sh
-    - name: set time
-      community.general.timezone:
-        hwclock: "UTC"
     - name: copy stage3 tarball
       copy:
         src: ../stage3-amd64-openrc-20231217T170203Z.tar.xz #FIXME hardcoded filename
-        dest: /root
+        dest: /mnt/gentoo
+    - name:  extract stage3 tarball
+      script: ../scripts/extract-stage3.sh
