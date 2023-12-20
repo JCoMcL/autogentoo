@@ -30,15 +30,21 @@ ssh-wrapper/ssh: | ssh-wrapper/
 sendkeys.rb:
 	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 555 /dev/stdin $@
 
-stages/00-sshd: sshpass-wrapper/ssh boot.iso sendkeys.rb | img1.cow stages/
+stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
 	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
+	# save and create the save flag. TODO abstract this out
+	echo savevm $(@F) | socat - ./qemu.sock
+	touch $@
+
+stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
+	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
 	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
 	# save and create the save flag. TODO abstract this out
-	echo savevm 00-sshd | socat - ./qemu.sock
+	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
 
 	${MAKE} stop
@@ -57,7 +63,7 @@ $(RESUME): resume-%: | stages/%
 	${QEMU_CMD} -nographic img1.cow -loadvm $* &
 	sleep 3 #FIXME
 
-resume: not-currently-running | stages/00-sshd
+resume: not-currently-running | stages/01-sshd
 	${MAKE} resume-`ls stages | tail -n 1`
 
 stop: currently-running
@@ -68,8 +74,8 @@ ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
 ssh/key.pub: ssh/key
 
-stages/01-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/00-sshd
-	${MAKE} resume-00-sshd
+stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
+	${MAKE} resume-01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
@@ -86,8 +92,8 @@ stage3-amd64-openrc.tar.xz:
 ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
-stages/02-system-unpacked: stages/01-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
-	${MAKE} resume-01-ssh-key
+stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
+	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
