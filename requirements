@@ -6,3 +6,4 @@ qemu
 socat
 procps # provides pgrep
 ruby
+lynx

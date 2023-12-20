@@ -1,5 +1,12 @@
----
 - hosts: all
+  gather_facts: no
   tasks:
-    - name: bruh
-      ansible.builtin.import_tasks: tasks/installgentoo.yaml
+    - name: prepare disks
+      script: ../scripts/disk-setup.sh
+    - name: set time
+      community.general.timezone:
+        hwclock: "UTC"
+    - name: copy stage3 tarball
+      copy:
+        src: ../stage3-amd64-openrc-20231217T170203Z.tar.xz #FIXME hardcoded filename
+        dest: /root

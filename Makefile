@@ -75,10 +75,20 @@ stages/01-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/00-sshd
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
 
+DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
+stage3-amd64-openrc.tar.xz:
+	lynx -listonly -nonumbers -dump $(DISTFILES) | grep -oP "$(DISTFILES).+\.(tar\.xz|sha256)\$$" | wget -Ni /dev/stdin
+	sha256sum --check stage3-amd64-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
+	ln -sf stage3-amd64-openrc-*.tar.xz $@
+
 #ANSIBLE SECTION
 
 ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
+
+stages/02-man-idk: stages/01-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
+	${MAKE} resume-01-ssh-key
+	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 
 clean:
 	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb #boot.iso

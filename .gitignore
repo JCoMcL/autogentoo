@@ -12,3 +12,5 @@ ssh/
 sendkey.rb
 sendkeys.rb
 sshpass-wrapper
+*.tar.xz
+*.tar.xz.sha256
