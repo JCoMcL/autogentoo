@@ -13,7 +13,8 @@ This document is for my own reference. Features described below are mostly TODOs
    - Once the AG distro is built, the VM will hopefully no longer be necessary
 
 2. install on disk
-   1.1. Portable, bootable, AG distro and installation medium
+
+   2.1. Portable, bootable, AG distro and installation medium
    
    - can by flashed or dd'ed into a flash drive
    - broad support
@@ -21,7 +22,7 @@ This document is for my own reference. Features described below are mostly TODOs
    - can boot in autoinstall mode, allowing completely unattended installation
      - play a tune using pcspkr when complete
 
-3. Install over ssh
+4. Install over ssh
 
 I guess that's it?
 
