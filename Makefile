@@ -39,6 +39,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
 
+
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
@@ -95,6 +96,13 @@ ansible/host: ssh/key
 stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
+	# save and create the save flag. TODO abstract this out
+	echo savevm $(@F) | socat - ./qemu.sock
+	touch $@
+
+stages/04-unnamed-stage: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
+	${MAKE} resume-03-system-unpacked
+	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@

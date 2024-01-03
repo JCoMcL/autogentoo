@@ -1,0 +1,9 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name:  bruh
+      script: ../scripts/portage-setup.sh
+    - name: allow ansible access in chroot
+      script: ../scripts/chroot-setup.sh
+    #- name:  moment
+      #script: ../scripts/chrooted.sh
