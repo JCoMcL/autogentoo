@@ -39,7 +39,6 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
 
-
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
@@ -47,8 +46,6 @@ stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
-
-	${MAKE} stop
 
 not-currently-running:
 	! ${MAKE} currently-running
@@ -59,9 +56,11 @@ currently-running:
 
 RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
 $(RESUME): resume-%: | stages/%
-	${MAKE} currently-running && \
-	echo loadvm $* | socat - ./qemu.sock || \
-	${QEMU_CMD} -nographic img1.cow -loadvm $* &
+	if ${MAKE} currently-running ; then\
+		echo loadvm $* | socat - ./qemu.sock;\
+	else\
+		${QEMU_CMD} -nographic img1.cow -loadvm $* & \
+	fi
 	sleep 3 #FIXME
 
 resume: not-currently-running | stages/01-sshd
