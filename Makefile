@@ -99,7 +99,7 @@ stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3
 	echo savevm $(@F) | socat - ./qemu.sock
 	touch $@
 
-stages/04-unnamed-stage: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
+stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-03-system-unpacked
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
 	# save and create the save flag. TODO abstract this out
