@@ -5,8 +5,7 @@ ISO_URL = https://distfiles.gentoo.org/releases/amd64/autobuilds/20230716T164653
 HOST_SSH_PORT = 60022
 INITIAL_PASSWD = root
 
-QEMU_CMD = qemu-system-${ARCH} -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
-
+QEMU_CMD = qemu-system-${ARCH} --enable-kvm -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 %/:
 	mkdir -p $@
@@ -34,6 +33,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
 	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
+	echo #Be advised that your the password will be shown onscreen
 	read
 	# save and create the save flag. TODO abstract this out
 	echo savevm $(@F) | socat - ./qemu.sock
@@ -41,6 +41,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
+	echo help | socat - ./qemu.sock >/dev/null #this seems to help unclog the pipes
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
 	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
 	# save and create the save flag. TODO abstract this out
@@ -63,7 +64,7 @@ $(RESUME): resume-%: | stages/%
 	fi
 	sleep 3 #FIXME
 
-resume: not-currently-running | stages/01-sshd
+resume: not-currently-running | stages/00-interactive
 	${MAKE} resume-`ls stages | tail -n 1`
 
 stop: currently-running
