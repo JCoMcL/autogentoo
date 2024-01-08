@@ -5,7 +5,7 @@ ISO_URL = https://distfiles.gentoo.org/releases/amd64/autobuilds/20230716T164653
 HOST_SSH_PORT = 60022
 INITIAL_PASSWD = root
 
-QEMU_CMD = qemu-system-${ARCH} --enable-kvm -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
+QEMU = qemu-system-${ARCH} --enable-kvm -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 %/:
 	mkdir -p $@
@@ -31,21 +31,25 @@ sendkeys.rb:
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
-	${QEMU_CMD} -boot order=d -drive file=img1.cow,format=qcow2 &
+	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
-	echo #Be advised that your the password will be shown onscreen
 	read
 	# save and create the save flag. TODO abstract this out
-	echo savevm $(@F) | socat - ./qemu.sock
+	scripts/qemu-cmd.sh savevm $(@F)
+
 	touch $@
+
+	#${MAKE} stop
+
+	scripts/qemu-cmd.sh help
+	scripts/qemu-cmd.sh quit
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
-	echo help | socat - ./qemu.sock >/dev/null #this seems to help unclog the pipes
-	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
+	sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
 	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
 	# save and create the save flag. TODO abstract this out
-	echo savevm $(@F) | socat - ./qemu.sock
+	scripts/qemu-cmd.sh savevm $(@F)
 	touch $@
 
 not-currently-running:
@@ -58,9 +62,9 @@ currently-running:
 RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
 $(RESUME): resume-%: | stages/%
 	if ${MAKE} currently-running ; then\
-		echo loadvm $* | socat - ./qemu.sock;\
+		scripts/qemu-cmd.sh loadvm $*;\
 	else\
-		${QEMU_CMD} -nographic img1.cow -loadvm $* & \
+		${QEMU} -nographic img1.cow -loadvm $* & \
 	fi
 	sleep 3 #FIXME
 
@@ -68,8 +72,9 @@ resume: not-currently-running | stages/00-interactive
 	${MAKE} resume-`ls stages | tail -n 1`
 
 stop: currently-running
-	echo quit | socat - ./qemu.sock || \
-	( test "`pgrep qemu | wc -l`" -eq 1 && kill `pgrep qemu` )
+	if ! scripts/qemu-cmd.sh quit; then\
+		test "`pgrep qemu | wc -l`" -eq 1 && kill `pgrep qemu`;\
+	fi
 
 ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
@@ -79,7 +84,7 @@ stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	${MAKE} resume-01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	# save and create the save flag. TODO abstract this out
-	echo savevm $(@F) | socat - ./qemu.sock
+	scripts/qemu-cmd.sh savevm $(@F)
 	touch $@
 
 DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
@@ -97,14 +102,14 @@ stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3
 	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 	# save and create the save flag. TODO abstract this out
-	echo savevm $(@F) | socat - ./qemu.sock
+	scripts/qemu-cmd.sh savevm $(@F)
 	touch $@
 
 stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-03-system-unpacked
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
 	# save and create the save flag. TODO abstract this out
-	echo savevm $(@F) | socat - ./qemu.sock
+	scripts/qemu-cmd.sh savevm $(@F)
 	touch $@
 
 clean:
