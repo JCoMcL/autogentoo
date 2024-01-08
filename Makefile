@@ -36,6 +36,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	read
 	# save and create the save flag. TODO abstract this out
 	scripts/qemu-cmd.sh savevm $(@F)
+	while ! scripts/qemu-cmd.sh info snapshots | grep $(@F); do sleep 1; done
 
 	touch $@
 
