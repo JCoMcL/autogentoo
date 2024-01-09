@@ -34,23 +34,14 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
-	# save and create the save flag. TODO abstract this out
-	scripts/qemu-cmd.sh savevm $(@F)
-	while ! scripts/qemu-cmd.sh info snapshots | grep $(@F); do sleep 1; done
-
-	touch $@
-
-	#${MAKE} stop
-
-	scripts/qemu-cmd.sh help
-	scripts/qemu-cmd.sh quit
+	scripts/savevm.sh $(@F)
+	${MAKE} stop
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
 	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
-	# save and create the save flag. TODO abstract this out
-	scripts/qemu-cmd.sh savevm $(@F)
+	scripts/savevm.sh $(@F)
 	touch $@
 
 not-currently-running:
@@ -84,8 +75,7 @@ ssh/key.pub: ssh/key
 stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	${MAKE} resume-01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
-	# save and create the save flag. TODO abstract this out
-	scripts/qemu-cmd.sh savevm $(@F)
+	scripts/savevm.sh $(@F)
 	touch $@
 
 DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
@@ -101,16 +91,14 @@ ansible/host: ssh/key
 
 stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-02-ssh-key
-	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
-	# save and create the save flag. TODO abstract this out
-	scripts/qemu-cmd.sh savevm $(@F)
+	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml | cat -
+	scripts/savevm.sh $(@F)
 	touch $@
 
 stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-03-system-unpacked
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
-	# save and create the save flag. TODO abstract this out
-	scripts/qemu-cmd.sh savevm $(@F)
+	scripts/savevm.sh $(@F)
 	touch $@
 
 clean:
