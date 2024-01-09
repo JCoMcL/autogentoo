@@ -47,7 +47,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
-	sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
+	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
 	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
 	# save and create the save flag. TODO abstract this out
 	scripts/qemu-cmd.sh savevm $(@F)
