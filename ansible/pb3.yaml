@@ -1,0 +1,5 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: finally reboot
+      script: ../scripts/reboot.sh
