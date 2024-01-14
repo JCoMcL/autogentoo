@@ -20,3 +20,20 @@ FEATURES="${FEATURES} getbinpkg"
 # Require signatures
 FEATURES="${FEATURES} binpkg-request-signature"
 EOF
+
+cat << EOF >> /etc/portage/make.conf
+ACCEPT_LICENSE="@FREE @BINARY-REDISTRIBUTABLE"
+EOF
+
+emerge sys-kernel/linux-firmware
+
+emerge sys-kernel/gentoo-kernel-bin
+emerge --depclean
+
+#The following borders on configuration and as such will be moved elsewhere once configuration is in scope for this project
+genfstab -L / | sed s/relatime/noatime/ > /etc/fstab
+echo autogentoo > /etc/hostname
+
+emerge --ask net-misc/dhcpcd
+rc-update add dhcpcd default
+rc-service dhcpcd start
