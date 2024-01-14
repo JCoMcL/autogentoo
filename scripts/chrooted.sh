@@ -34,6 +34,22 @@ emerge --depclean
 genfstab -L / | sed s/relatime/noatime/ > /etc/fstab
 echo autogentoo > /etc/hostname
 
-emerge --ask net-misc/dhcpcd
+#having internet is pretty important, I guess
+emerge net-misc/dhcpcd
 rc-update add dhcpcd default
 rc-service dhcpcd start
+
+emerge --ask net-dialup/ppp
+emerge --ask net-wireless/iw net-wireless/wpa_supplicant
+
+#smells of systemd but works by default (I think)
+emerge app-admin/sysklogd
+
+#make sure ssh config is copied over for this to work
+rc-update add sshd default
+
+#as much as I hate the bloat, GRUB is the perfect choice for maximum compatibility
+#echo 'GRUB_PLATFORMS="*"' >> /etc/portage/make.conf #why not, right?
+emerge --verbose sys-boot/grub
+grub-install --target=x86_64-efi --efi-directory=/efi --removable
+grub-mkconfig -o /boot/grub/grub.cfg

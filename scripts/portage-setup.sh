@@ -6,6 +6,8 @@ cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos
 #I'm intending to build a portable system, so this probably doesn't make much sense
 cp --dereference /etc/resolv.conf /mnt/gentoo/etc/
 
+cp --dereference /etc/ssh /mnt/gentoo/etc/
+
 #there is some failure of logic at play here:
 #if you don't have a faster internet connection than the mirrors, the results will essentially be random
 #in such a case, we should choose either the nearest (lowest latency) mirrors, or the most generally reliable
