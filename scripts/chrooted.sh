@@ -39,8 +39,8 @@ emerge net-misc/dhcpcd
 rc-update add dhcpcd default
 rc-service dhcpcd start
 
-emerge --ask net-dialup/ppp
-emerge --ask net-wireless/iw net-wireless/wpa_supplicant
+emerge net-dialup/ppp
+emerge net-wireless/iw net-wireless/wpa_supplicant
 
 #smells of systemd but works by default (I think)
 emerge app-admin/sysklogd
