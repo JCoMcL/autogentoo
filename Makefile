@@ -5,6 +5,9 @@ ISO_URL = https://distfiles.gentoo.org/releases/amd64/autobuilds/20230716T164653
 HOST_SSH_PORT = 60022
 INITIAL_PASSWD = root
 
+SAVE_0 = scripts/fake-savevm.sh
+SAVE_1 = scripts/savevm.sh
+
 QEMU = qemu-system-${ARCH} --enable-kvm -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 %/:
@@ -34,14 +37,14 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 &
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
-	scripts/savevm.sh $(@F)
+	$(SAVE_0) $(@F)
 	#${MAKE} stop
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
 	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
-	scripts/savevm.sh $(@F)
+	$(SAVE_0) $(@F)
 
 not-currently-running:
 	! ${MAKE} currently-running
@@ -74,7 +77,7 @@ ssh/key.pub: ssh/key
 stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	${MAKE} resume-01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
-	scripts/savevm.sh $(@F)
+	$(SAVE_1) $(@F)
 
 DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
 stage3-amd64-openrc.tar.xz:
@@ -90,17 +93,17 @@ ansible/host: ssh/key
 stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml | cat -
-	scripts/savevm.sh $(@F)
+	$(SAVE_0) $(@F)
 
 stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-03-system-unpacked
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
-	scripts/savevm.sh $(@F)
+	$(SAVE_1) $(@F)
 
 stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-04-unnamed-stage
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
-	scripts/savevm.sh $(@F)
+	$(SAVE_0) $(@F)
 
 clean:
 	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb #boot.iso
