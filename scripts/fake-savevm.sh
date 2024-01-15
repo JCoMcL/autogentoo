@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-touch stages/$1
+install -m 555 scripts/fake-loadvm.sh "stages/`basename $1`"

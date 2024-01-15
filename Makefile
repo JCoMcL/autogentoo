@@ -54,9 +54,9 @@ currently-running:
 	pgrep qemu
 
 RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
-$(RESUME): resume-%: | stages/%
+$(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
-		scripts/qemu-cmd.sh loadvm $*;\
+		$< ;\
 	else\
 		${QEMU} -nographic img1.cow -loadvm $* & \
 	fi
@@ -66,7 +66,7 @@ resume: not-currently-running | stages/00-interactive
 	${MAKE} resume-`ls stages | tail -n 1`
 
 stop: currently-running
-	if ! scripts/qemu-cmd.sh quit; then\
+	if ! timeout 5 scripts/qemu-cmd.sh quit; then\
 		test "`pgrep qemu | wc -l`" -eq 1 && kill `pgrep qemu`;\
 	fi
 
@@ -106,6 +106,6 @@ stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-am
 	$(SAVE_0) $(@F)
 
 clean:
-	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb #boot.iso
+	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb qemu.lock qemu.sock #boot.iso
 
 .PHONY: resume $(RESUME) stop clean reset currently-running not-currently-running
