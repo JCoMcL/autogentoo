@@ -100,6 +100,12 @@ stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh 
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
 	$(SAVE_1) $(@F)
 
+OVMF.fd:
+	if test -e /usr/share/ovmf/OVMF.fd; then ln -sf /usr/share/OVMF.fd . ;\
+	elif test -e /nix; then find /nix -name OVMF.fd -exec ln -sf {} . \; -print -quit | grep . ;\
+	else find / -name OVMF.fd -exec ln -sf {} . \; -print -quit | grep . ;\
+	fi
+
 stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-04-unnamed-stage
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml

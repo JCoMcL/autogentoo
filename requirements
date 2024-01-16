@@ -8,3 +8,4 @@ procps # provides pgrep
 ruby
 lynx
 ansible
+OVMF
