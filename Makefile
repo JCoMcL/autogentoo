@@ -58,7 +58,7 @@ $(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
 		$< ;\
 	else\
-		${QEMU} -nographic img1.cow -loadvm $* & \
+		${QEMU} img1.cow -loadvm $* & \
 	fi
 	sleep 3 #FIXME
 
