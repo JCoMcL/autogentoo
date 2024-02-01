@@ -31,6 +31,7 @@ emerge sys-kernel/gentoo-kernel-bin
 emerge --depclean
 
 #The following borders on configuration and as such will be moved elsewhere once configuration is in scope for this project
+emerge genfstab
 genfstab -L / | sed s/relatime/noatime/ > /etc/fstab
 echo autogentoo > /etc/hostname
 
