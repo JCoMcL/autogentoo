@@ -3,7 +3,7 @@
 cd
 
 cp -r /etc/ssh /mnt/gentoo/etc
-cp -r /etc/shadow /mnt/gentoo/etc
+#cp -r /etc/shadow /mnt/gentoo/etc
 cp -r /root/.ssh /mnt/gentoo/root/
 
 exit 0

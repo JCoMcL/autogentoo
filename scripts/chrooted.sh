@@ -22,7 +22,7 @@ FEATURES="${FEATURES} binpkg-request-signature"
 EOF
 
 cat << EOF >> /etc/portage/make.conf
-ACCEPT_LICENSE="@FREE @BINARY-REDISTRIBUTABLE"
+ACCEPT_LICENSE="*"
 EOF
 
 emerge sys-kernel/linux-firmware
@@ -32,7 +32,7 @@ emerge --depclean
 
 #The following borders on configuration and as such will be moved elsewhere once configuration is in scope for this project
 emerge genfstab
-genfstab -L / | sed s/relatime/noatime/ > /etc/fstab
+genfstab -t PARTLABEL / | sed s/relatime/noatime/ > /etc/fstab
 echo autogentoo > /etc/hostname
 
 #having internet is pretty important, I guess
