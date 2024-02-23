@@ -3,7 +3,7 @@
 sfdisk /dev/sda << EOF
 label: gpt
 
-start=,size= 1G, type=U, name=boot
+start=,size= 120M, type=U, name=boot
 start=,size=  +, type=L, name=root
 EOF
 
