@@ -9,7 +9,7 @@ INITIAL_PASSWD = root
 SAVE_0 = scripts/fake-savevm.sh
 SAVE_1 = scripts/savevm.sh
 
-QEMU = qemu-system-${ARCH} --enable-kvm -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
+QEMU = true
 
 %/:
 	mkdir -p $@
@@ -75,10 +75,10 @@ ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@
 ssh/key.pub: ssh/key
 
-stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
-	${MAKE} resume-01-sshd
+stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh #stages/01-sshd
+	#${MAKE} resume-01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@${HOST_SSH_ADDRESS}
-	$(SAVE_1) $(@F)
+	$(SAVE_0) $(@F)
 
 DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
 stage3-amd64-openrc.tar.xz:
@@ -99,7 +99,7 @@ stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3
 stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-03-system-unpacked
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
-	$(SAVE_1) $(@F)
+	$(SAVE_0) $(@F)
 
 OVMF.fd:
 	if test -e /usr/share/ovmf/OVMF.fd; then ln -sf /usr/share/OVMF.fd . ;\
