@@ -2,7 +2,8 @@ DISK_SIZE = 10G
 MEM = 2G
 ARCH = x86_64
 ISO_URL = https://distfiles.gentoo.org/releases/amd64/autobuilds/20230716T164653Z/install-amd64-minimal-20230716T164653Z.iso
-HOST_SSH_PORT = 60022
+HOST_SSH_PORT = 22
+HOST_SSH_ADDRESS = 192.168.8.109
 INITIAL_PASSWD = root
 
 SAVE_0 = scripts/fake-savevm.sh
@@ -43,7 +44,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
-	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
+	while ! $< -p ${HOST_SSH_PORT} root@${HOST_SSH_ADDRESS} true; do sleep 3; done
 	$(SAVE_0) $(@F)
 
 not-currently-running:
@@ -76,7 +77,7 @@ ssh/key.pub: ssh/key
 
 stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	${MAKE} resume-01-sshd
-	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
+	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@${HOST_SSH_ADDRESS}
 	$(SAVE_1) $(@F)
 
 DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
@@ -88,7 +89,7 @@ stage3-amd64-openrc.tar.xz:
 #ANSIBLE SECTION
 
 ansible/host: ssh/key
-	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
+	echo "${HOST_SSH_ADDRESS}:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
 stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-02-ssh-key
