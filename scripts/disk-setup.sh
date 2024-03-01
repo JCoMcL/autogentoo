@@ -1,6 +1,6 @@
 #!/usr/bin/env -S sh -e
 
-sfdisk /dev/sda << EOF
+sfdisk /dev/nvme0n1 << EOF
 label: gpt
 
 start=,size= 120M, type=U, name=boot
