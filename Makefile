@@ -110,7 +110,7 @@ OVMF.fd:
 stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-04-unnamed-stage
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
-	$(SAVE_1) $(@F)
+	$(SAVE_0) $(@F)
 
 clean:
 	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb qemu.lock qemu.sock #boot.iso

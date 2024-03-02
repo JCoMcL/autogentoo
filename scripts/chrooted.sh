@@ -1,8 +1,5 @@
 #!/usr/bin/env -S arch-chroot /mnt/gentoo /usr/bin/env sh
 
-mkdir /efi
-mount /dev/disk/by-partlabel/boot /efi
-
 emerge-webrsync
 
 #skip eselect profile because the default is what we want for now
@@ -27,6 +24,7 @@ EOF
 
 emerge sys-kernel/linux-firmware
 
+echo sys-kernel/installkernel dracut > /etc/portage/package.use/installkernel
 emerge sys-kernel/gentoo-kernel-bin
 emerge --depclean
 
@@ -49,8 +47,16 @@ emerge app-admin/sysklogd
 #make sure ssh config is copied over for this to work
 rc-update add sshd default
 
-#as much as I hate the bloat, GRUB is the perfect choice for maximum compatibility
-#echo 'GRUB_PLATFORMS="*"' >> /etc/portage/make.conf #why not, right?
-emerge --verbose sys-boot/grub
-grub-install --target=x86_64-efi --efi-directory=/efi --removable
-grub-mkconfig -o /boot/grub/grub.cfg
+#allow emerge to change its own config
+echo CONFIG_PROTECT_MASK=\"/etc/portage\" >> /etc/portage/make.conf
+
+# set up guru repo for limine
+emerge app-eselect/eselect-repository
+eselect repository enable guru
+emerge dev-vcs/git
+emaint sync --repo guru
+emerge --regen #create a cache so syncing is faster in the future
+
+#install limine
+
+
