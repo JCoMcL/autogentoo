@@ -3,7 +3,7 @@ MEM = 2G
 ARCH = x86_64
 ISO_URL = https://distfiles.gentoo.org/releases/amd64/autobuilds/20230716T164653Z/install-amd64-minimal-20230716T164653Z.iso
 HOST_SSH_PORT = 22
-HOST_SSH_ADDRESS = 192.168.8.109
+HOST_SSH_ADDRESS = 192.168.8.141
 INITIAL_PASSWD = root
 
 SAVE_0 = scripts/fake-savevm.sh
