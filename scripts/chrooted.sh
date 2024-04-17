@@ -1,4 +1,4 @@
-#!/usr/bin/env -S arch-chroot /mnt/gentoo /usr/bin/env sh
+#!/usr/bin/env -S arch-chroot /mnt/gentoo /usr/bin/env PATH=${PATH}:/bin sh
 
 emerge-webrsync
 
@@ -25,6 +25,9 @@ EOF
 emerge sys-kernel/linux-firmware
 
 echo sys-kernel/installkernel dracut > /etc/portage/package.use/installkernel
+echo USE="dist-kernel" >> /etc/portage/make.conf #automatic rebuild when using out-of-tree modules
+#TODO we need to add a hook to our bootloader every kernel upgrade
+
 emerge sys-kernel/gentoo-kernel-bin
 emerge --depclean
 
