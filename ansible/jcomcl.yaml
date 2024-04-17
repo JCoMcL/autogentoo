@@ -1,0 +1,40 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+  - name: Send magic Wake-On-Lan packet to turn on individual systems
+    community.general.wakeonlan:
+      mac: '{{ mac }}'
+    delegate_to: localhost
+
+  - name: Wait for system to become reachable
+    ansible.builtin.wait_for_connection:
+
+  - name: Gather facts for first time
+    ansible.builtin.setup:
+
+  - name: Set up user
+    user:
+      name: jcomcl
+      group: wheel
+      create_home: true
+      shell: /bin/zsh
+
+  - name: basics for comfortable terminal usage
+    package:
+      name:
+        - doas
+        - zsh
+        - lf #this one is masked on gentoo
+        - kakoune #masked too, smh
+        - htop
+        - tmux
+        - yadm
+      state: latest
+
+  - name: doas setup
+    lineinfile:
+      create: true
+      line: 'permit nopass :wheel'
+      path: /etc/doas.conf
+      validate: 'doas -C %s'
+
