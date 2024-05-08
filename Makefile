@@ -1,7 +1,6 @@
 DISK_SIZE = 10G
 MEM = 2G
 ARCH = x86_64
-ISO_URL = https://distfiles.gentoo.org/releases/amd64/autobuilds/20230716T164653Z/install-amd64-minimal-20230716T164653Z.iso
 HOST_SSH_PORT = 60022
 INITIAL_PASSWD = root
 
@@ -20,7 +19,8 @@ img1.cow: blank.raw
 	qemu-img create -o backing_file=$<,backing_fmt=raw -f qcow2 $@
 
 boot.iso:
-	wget ${ISO_URL} -O $@
+	scripts/download-files.sh https://distfiles.gentoo.org/releases/amd64/autobuilds/current-install-amd64-minimal iso
+	mv *.iso $@
 
 sshpass-wrapper/ssh: | sshpass-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
@@ -31,6 +31,10 @@ ssh-wrapper/ssh: | ssh-wrapper/
 
 sendkeys.rb:
 	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 555 /dev/stdin $@
+
+#system-level setup required if running on Gentoo
+portage-setup:
+	rsync -irv portage/* /etc/portage
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
@@ -79,9 +83,9 @@ stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	$(SAVE_1) $(@F)
 
-DISTFILES = http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
+DISTFILES = 
 stage3-amd64-openrc.tar.xz:
-	lynx -listonly -nonumbers -dump $(DISTFILES) | grep -oP "$(DISTFILES).+\.(tar\.xz|sha256)\$$" | wget -Ni /dev/stdin
+	scripts/download-files.sh http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc xz sha265
 	sha256sum --check stage3-amd64-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
 	ln -sf stage3-amd64-openrc-*.tar.xz $@
 
