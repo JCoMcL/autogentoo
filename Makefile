@@ -42,7 +42,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 & echo $$! > qemu.pid
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
-	$(SAVE_0) $(@F)
+	$(SAVE_1) $(@F) #FIXME logics breaks unless this if this is a fake save
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
@@ -62,7 +62,7 @@ $(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
 		$< ;\
 	else\
-		${QEMU} img1.cow -loadvm $* & echo $$! > qemu.pid\
+		${QEMU} img1.cow -loadvm $* & echo $$! > qemu.pid;\
 	fi
 	sleep 3 #FIXME
 
@@ -72,7 +72,7 @@ resume: not-currently-running | stages/00-interactive
 stop:
 	if ${MAKE} currently-running; then\
 		if ! timeout 5 scripts/qemu-cmd.sh quit; then\
-			kill `<qemu,pid`;\
+			kill `<qemu.pid`;\
 			rm qemu.pid ;\
 		fi;\
 	fi
