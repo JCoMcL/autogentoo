@@ -17,3 +17,4 @@ sshpass-wrapper
 .*.kak.*
 *.lock
 OVMF.fd
+*.pid

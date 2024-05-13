@@ -25,6 +25,7 @@ boot.iso:
 sshpass-wrapper/ssh: | sshpass-wrapper/
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
+
 ssh-wrapper/ssh: | ssh-wrapper/
 	echo -e "#!/usr/bin/env sh\n$$(which ssh) -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
@@ -38,11 +39,10 @@ portage-setup:
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
-	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 &
+	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 & echo $$! > qemu.pid
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
 	$(SAVE_0) $(@F)
-	#${MAKE} stop
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
@@ -54,24 +54,27 @@ not-currently-running:
 	! ${MAKE} currently-running
 
 currently-running:
-	test -S qemu.sock
-	pgrep qemu
+	test -f qemu.pid && ps h -o cmd -p `<qemu.pid` | grep qemu
+	#test -S qemu.sock
 
 RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
 $(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
 		$< ;\
 	else\
-		${QEMU} img1.cow -loadvm $* & \
+		${QEMU} img1.cow -loadvm $* & echo $$! > qemu.pid\
 	fi
 	sleep 3 #FIXME
 
 resume: not-currently-running | stages/00-interactive
 	${MAKE} resume-`ls stages | tail -n 1`
 
-stop: currently-running
-	if ! timeout 5 scripts/qemu-cmd.sh quit; then\
-		test "`pgrep qemu | wc -l`" -eq 1 && kill `pgrep qemu`;\
+stop:
+	if ${MAKE} currently-running; then\
+		if ! timeout 5 scripts/qemu-cmd.sh quit; then\
+			kill `<qemu,pid`;\
+			rm qemu.pid ;\
+		fi;\
 	fi
 
 ssh/key: | ssh/
@@ -83,7 +86,6 @@ stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	$(SAVE_1) $(@F)
 
-DISTFILES = 
 stage3-amd64-openrc.tar.xz:
 	scripts/download-files.sh http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc xz sha265
 	sha256sum --check stage3-amd64-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
@@ -96,7 +98,7 @@ ansible/host: ssh/key
 
 stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-02-ssh-key
-	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml | cat -
+	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 	$(SAVE_0) $(@F)
 
 stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
@@ -116,6 +118,7 @@ stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-am
 	$(SAVE_1) $(@F)
 
 clean:
-	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb qemu.lock qemu.sock #boot.iso
+	${MAKE} stop
+	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb qemu.lock qemu.sock qemu.pid #boot.iso
 
 .PHONY: resume $(RESUME) stop clean reset currently-running not-currently-running
