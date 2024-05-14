@@ -39,7 +39,7 @@ portage-setup:
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
-	${QEMU} -boot order=d -drive file=img1.cow,format=qcow2 & echo $$! > qemu.pid
+	${QEMU} -boot once=d -drive file=img1.cow,format=qcow2 & echo $$! > qemu.pid
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
 	$(SAVE_1) $(@F) #FIXME logics breaks unless this if this is a fake save
@@ -106,16 +106,20 @@ stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh 
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
 	$(SAVE_1) $(@F)
 
-OVMF.fd:
-	if test -e /usr/share/ovmf/OVMF.fd; then ln -sf /usr/share/OVMF.fd . ;\
-	elif test -e /nix; then find /nix -name OVMF.fd -exec ln -sf {} . \; -print -quit | grep . ;\
-	else find / -name OVMF.fd -exec ln -sf {} . \; -print -quit | grep . ;\
-	fi
+%.fd:
+	find /usr /nix -name $@ -exec cp {} . \; -print -quit | grep .
 
 stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-amd64-openrc.tar.xz
 	${MAKE} resume-04-unnamed-stage
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
 	$(SAVE_1) $(@F)
+
+
+and-then-boot: stages/05-reboot OVMF_CODE.fd OVMF_VARS.fd
+	${QEMU} img1.cow -boot order=c,strict=on -machine q35,smm=on,accel=kvm \
+	  -global driver=cfi.pflash01,property=secure,value=on \
+	  -drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on \
+	  -drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd \
 
 clean:
 	${MAKE} stop

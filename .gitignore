@@ -16,5 +16,5 @@ sshpass-wrapper
 *.tar.xz.sha256
 .*.kak.*
 *.lock
-OVMF.fd
 *.pid
+*.fd
