@@ -7,7 +7,7 @@ INITIAL_PASSWD = root
 SAVE_0 = scripts/fake-savevm.sh
 SAVE_1 = scripts/savevm.sh
 
-QEMU = qemu-system-${ARCH} --enable-kvm -m ${MEM} -cdrom boot.iso -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
+QEMU = qemu-system-${ARCH} --enable-kvm -m ${MEM} -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 %/:
 	mkdir -p $@
@@ -39,7 +39,7 @@ portage-setup:
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
-	${QEMU} -boot once=d -drive file=img1.cow,format=qcow2 & echo $$! > qemu.pid
+	${QEMU} -cdrom boot.iso -boot once=d -drive file=img1.cow,format=qcow2 & echo $$! > qemu.pid
 	echo #Once the system has booted and is in an interactive state, press ENTER to continue
 	read
 	$(SAVE_1) $(@F) #FIXME logics breaks unless this if this is a fake save
@@ -62,7 +62,7 @@ $(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
 		$< ;\
 	else\
-		${QEMU} img1.cow -loadvm $* & echo $$! > qemu.pid;\
+		${QEMU} -cdrom boot.iso img1.cow -loadvm $* & echo $$! > qemu.pid;\
 	fi
 	sleep 3 #FIXME
 
@@ -116,13 +116,15 @@ stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3-am
 
 
 and-then-boot: stages/05-reboot OVMF_CODE.fd OVMF_VARS.fd
-	${QEMU} img1.cow -boot order=c,strict=on -machine q35,smm=on,accel=kvm \
+	${MAKE} stop
+	${QEMU} img1.cow\
+	  -machine q35,smm=on,accel=kvm \
 	  -global driver=cfi.pflash01,property=secure,value=on \
 	  -drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on \
 	  -drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd \
 
 clean:
 	${MAKE} stop
-	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb qemu.lock qemu.sock qemu.pid #boot.iso
+	rm -rf blank.raw img1.cow stages ssh sshpass-wrapper ssh-wrapper ansible/host sendkeys.rb qemu.lock qemu.sock qemu.pid *.fd #boot.iso
 
 .PHONY: resume $(RESUME) stop clean reset currently-running not-currently-running

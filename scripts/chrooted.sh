@@ -27,6 +27,7 @@ EOF
 
 emerge sys-kernel/linux-firmware
 
+echo sys-kernel/installkernel dracut > /etc/portage/package.use/installkernel
 emerge sys-kernel/gentoo-kernel-bin
 emerge --depclean
 
