@@ -7,6 +7,9 @@ emerge-webrsync
 
 #skip eselect profile because the default is what we want for now
 
+# allow self configuring of portage
+echo CONFIG_PROTECT_MASK=\"/etc/portage\" >> /etc/portage/make.conf
+
 #this is important so that it doesn't take 1000 years to compile on VM
 cat << EOF > /etc/portage/binrepos.conf/gentoobinhost.conf
 [binhost]
