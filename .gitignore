@@ -18,3 +18,4 @@ sshpass-wrapper
 *.lock
 *.pid
 *.fd
+target
