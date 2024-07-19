@@ -1,5 +1,58 @@
 #!/usr/bin/env -S sh -e
 
+
+#if ls /dev/disk/by-partlabel/boot; then
+
+error() {
+	echo [0m[31m$@[0m >&2
+}
+
+get_disk_via_appending_number() {
+	# I wouldn't trust this if I were you
+	if test -z "$DISK"; then
+		error "DISK is not set"
+		return 1
+	fi
+	disk="$(readlink -e $DISK)"
+
+	label="$1"
+	num=$(case "$label" in
+		boot) echo -n 1 ;;
+		root) echo -n 2 ;;
+		*) error "$label not recognised as a partition name"; return 1
+	esac)|| return 1
+	pre=$(case $disk in
+		/dev/nvme*) echo -n 'p' ;;
+	esac)
+	ls "$disk$pre$num"
+}
+
+get_disk_via_partlabel() {
+	label="$1"
+	for retry in `seq 0.1 0.1 1`; do
+		ls "/dev/disk/by-partlabel/$label" 2>/dev/null && return
+		sleep $retry
+	done
+	error "failed to get disk '$label' via partlabel, attempting other method"
+	get_disk_via_appending_number "$label"
+}
+
+testcases() {
+	set +e
+	echo "trying get_disk_via_appending_number with nvmen0"
+	DISK=/dev/nvme0n1 get_disk_via_appending_number root
+	echo "trying get_disk_via_appending_number with sdb"
+	DISK=/dev/sdb get_disk_via_appending_number boot
+	echo "trying get_disk_via_partlabel with disk that might exist"
+	get_disk_via_partlabel boot
+	echo "trying get_disk_via_partlabel with disk that doesn't exist (should take 2-4 seconds)"
+	DISK=/dev/sdb get_disk_via_partlabel a-partition-with-a-silly-name
+	exit 0
+}
+
+testcases
+exit 1
+
 DISK="$1"
 # TODO filter out duplicates
 DISK="${DISK:=$(find /dev/disk/by-id -not -name '*-part*' -not -type d | umenu -d "Select the disk to format")}"
@@ -31,4 +84,5 @@ mkfs.xfs /dev/disk/by-partlabel/root
 
 mkdir -p /mnt/gentoo
 mount /dev/disk/by-partlabel/root /mnt/gentoo
+
 
