@@ -11,15 +11,7 @@ URL="$1"
 
 filter() {
     if [[ -n "$@" ]]; then
-        sed -nE "/$(echo $@ |
-            awk '{
-                split($0,a," ")
-                out=$1
-                for (i=1;i<=length(a);i++)
-                    out = out "$|" a[i]
-                print out "$"
-            }')/p"
-            # yeah, I'm not so proud of this one
+        sed -nE "/$(printf '|%s$' $@ | cut -c 2-)/p"
     else
         cat
     fi

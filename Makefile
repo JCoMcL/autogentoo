@@ -36,7 +36,7 @@ stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
 	$(SAVE_1) $(@F)
 
 stage3-amd64-openrc.tar.xz:
-	scripts/download-files.sh http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc xz sha265
+	scripts/download-files.sh http://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc xz sha256
 	sha256sum --check stage3-amd64-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
 	ln -sf stage3-amd64-openrc-*.tar.xz $@
 
