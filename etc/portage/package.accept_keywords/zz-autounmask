@@ -1,0 +1,238 @@
+# package.accept_keywords# required by limine (argument)
+=sys-boot/limine-7.3.0 ~amd64
+# required by lf (argument)
+=app-misc/lf-31 ~amd64
+# required by github-cli (argument)
+=dev-util/github-cli-2.42.0 ~amd64
+# required by command-not-found (argument)
+=app-portage/command-not-found-0.0.5 ~amd64
+# required by =sys-kernel/gentoo-kernel-6.8.6 (argument)
+=sys-kernel/gentoo-kernel-6.8.6 ~amd64
+# required by sys-kernel/gentoo-kernel-6.8.6::gentoo
+# required by @selected
+# required by @world (argument)
+=virtual/dist-kernel-6.8.6 ~amd64
+# required by =sys-kernel/gentoo-sources-6.8.6 (argument)
+=sys-kernel/gentoo-sources-6.8.6 ~amd64
+# required by =sys-kernel/installkernel-36 (argument)
+=sys-kernel/installkernel-36 ~amd64
+# required by sys-kernel/installkernel-36::gentoo[efistub,-systemd]
+# required by @selected
+# required by @world (argument)
+=sys-boot/uefi-mkconfig-1.4 ~amd64
+# required by kakoune (argument)
+=app-editors/kakoune-2023.08.05 ~amd64
+# required by =sys-kernel/linux-firmware-99999999 (argument)
+=sys-kernel/linux-firmware-99999999 **
+# required by nyxt (argument)
+=www-client/nyxt-3.11.6 ~amd64
+# required by www-client/nyxt-3.11.6::guru
+# required by nyxt (argument)
+=sys-libs/libfixposix-0.5.1 ~amd64
+# required by gotop (argument)
+=sys-process/gotop-4.2.0 ~amd64
+# required by radeontop (argument)
+=app-misc/radeontop-1.4 ~amd64
+# required by =x11-misc/picom-11.2 (argument)
+=x11-misc/picom-11.2 ~amd64
+# required by steam-launcher (argument)
+=games-util/steam-launcher-1.0.0.79 ~amd64
+# required by games-util/steam-launcher-1.0.0.79::steam-overlay[joystick,udev]
+# required by steam-launcher (argument)
+=games-util/game-device-udev-rules-20230603 ~amd64
+# required by games-util/steam-launcher-1.0.0.79::steam-overlay
+# required by steam-launcher (argument)
+=sys-libs/libudev-compat-186-r1 ~amd64
+# required by media-gfx/blender-4.0.2-r1::gentoo[oidn]
+# required by @selected
+# required by @world (argument)
+=media-libs/oidn-2.2.2 ~amd64
+# required by =media-gfx/blender-4.0.2-r1 (argument)
+=media-gfx/blender-4.0.2-r1 ~amd64
+# required by app-misc/dragon (argument)
+=app-misc/dragon-1.2.0 ~amd64
+# required by joystick (argument)
+=games-util/joystick-1.8.1 ~amd64
+# required by steamtinkerlaunch (argument)
+=games-util/steamtinkerlaunch-12.0 ~amd64
+# required by games-util/steamtinkerlaunch-12.0::guru
+# required by steamtinkerlaunch (argument)
+=gnome-extra/yad-13.0 ~amd64
+# required by hid-nintendo (argument)
+=games-util/hid-nintendo-9999 **
+# required by dkms (argument)
+=sys-kernel/dkms-3.0.13 ~amd64
+# required by helvum (argument)
+=media-sound/helvum-0.5.1-r2 ~amd64
+# required by media-gfx/blender-4.0.2-r1::gentoo[openvdb]
+# required by blender (argument)
+=media-gfx/openvdb-11.0.0 ~amd64
+# required by media-gfx/blender-4.0.2-r1::gentoo[osl]
+# required by blender (argument)
+=media-libs/osl-1.13.7.0 ~amd64
+# required by darkhttpd (argument)
+=www-servers/darkhttpd-1.16 ~amd64
+# required by syncplay (argument)
+=media-video/syncplay-1.7.1 ~amd64
+# required by media-video/syncplay-1.7.1::guru[python_single_target_python3_11]
+# required by syncplay (argument)
+=dev-python/pem-23.1.0 ~amd64
+# required by oh-my-git-bin (argument)
+=games-misc/oh-my-git-bin-0.6.5 ~amd64
+# required by hey (argument)
+=app-benchmarks/hey-0.1.2 ~amd64
+# required by dev-games/godot-4.2.2::gentoo
+# required by godot (argument)
+=net-libs/wslay-1.1.1_p20210115 ~amd64
+# required by godot (argument)
+=dev-games/godot-4.2.2 ~amd64
+# required by dev-games/godot-4.2.2::gentoo
+# required by godot (argument)
+=dev-games/recastnavigation-1.6.0 ~amd64
+# required by fontpreview (argument)
+=media-gfx/fontpreview-1.0.6 ~amd64
+# required by =gentoo-sources-6.9.2 (argument)
+=sys-kernel/gentoo-sources-6.9.2 ~amd64
+# required by =gentoo-kernel-6.9.2 (argument)
+=sys-kernel/gentoo-kernel-6.9.2 ~amd64
+# required by games-util/hid-nintendo-9999::guru[dist-kernel]
+# required by @selected
+# required by @world (argument)
+=virtual/dist-kernel-6.9.2 ~amd64
+# required by =installkernel-38 (argument)
+=sys-kernel/installkernel-38 ~amd64
+# required by dev-python/zstandard-0.22.0::gentoo[-python_targets_python3_11,-python_targets_python3_10,python_targets_python3_12]
+# required by media-gfx/blender-4.1.1::gentoo[python_single_target_python3_12]
+# required by @selected
+# required by @world (argument)
+=dev-python/cffi-1.17.0_rc1 ~amd64
+# required by dev-python/zstandard-0.22.0::gentoo[-python_targets_python3_11,python_targets_python3_12,-python_targets_python3_10]
+# required by media-gfx/blender-4.1.1::gentoo[python_single_target_python3_12]
+# required by @selected
+# required by @world (argument)
+=dev-python/cffi-1.17.0_pre20240424 ~amd64
+# required by media-libs/liblqr-0.4.2-r1::gentoo
+# required by media-gfx/imagemagick-7.1.1.25::gentoo[lqr]
+# required by @selected
+# required by @world (argument)
+=dev-libs/glib-2.80.2 ~amd64
+# required by pup (argument)
+=app-misc/pup-0.4.0 ~amd64
+# required by dev-python/pipenv-2023.12.1-r1::gentoo[-test]
+# required by dev-python/dparse-0.6.4_beta0::gentoo
+=dev-python/pipdeptree-2.16.2 ~amd64
+# required by dev-python/pipenv-2023.12.1-r1::gentoo[-test]
+# required by dev-python/dparse-0.6.4_beta0::gentoo
+=dev-python/pythonfinder-2.1.0 ~amd64
+# required by dev-python/pipenv-2023.12.1-r1::gentoo[-test]
+# required by dev-python/dparse-0.6.4_beta0::gentoo
+=dev-python/click-didyoumean-0.3.1 ~amd64
+# required by dev-python/pipenv-2023.12.1-r1::gentoo[-test]
+# required by dev-python/dparse-0.6.4_beta0::gentoo
+=dev-python/shellingham-1.5.4 ~amd64
+# required by dev-python/pipenv-2023.12.1-r1::gentoo[-test]
+# required by dev-python/dparse-0.6.4_beta0::gentoo
+=dev-python/plette-0.4.4 ~amd64
+# required by dev-python/pipenv-2023.12.1-r1::gentoo[-test]
+# required by pipenv (argument)
+=dev-python/dparse-0.6.4_beta0 ~amd64
+# required by dev-python/dparse-0.6.4_beta0::gentoo
+=dev-python/pipenv-2023.12.1-r1 ~amd64
+# required by virtual/dist-kernel-6.6.32::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-6.6.32 ~amd64
+# required by sys-kernel/gentoo-kernel-6.6.32::gentoo
+=virtual/dist-kernel-6.6.32 ~amd64
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=virtual/dist-kernel-6.6.31 ~amd64
+# required by virtual/dist-kernel-6.6.31::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-6.6.31 ~amd64
+# required by virtual/dist-kernel-6.1.92::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-6.1.92 ~amd64
+# required by sys-kernel/gentoo-kernel-6.1.92::gentoo
+=virtual/dist-kernel-6.1.92 ~amd64
+# required by virtual/dist-kernel-6.1.91::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-6.1.91 ~amd64
+# required by sys-kernel/gentoo-kernel-6.1.91::gentoo
+=virtual/dist-kernel-6.1.91 ~amd64
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=virtual/dist-kernel-5.15.160 ~amd64
+# required by virtual/dist-kernel-5.15.160::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-5.15.160 ~amd64
+# required by sys-kernel/gentoo-kernel-5.15.159::gentoo
+=virtual/dist-kernel-5.15.159 ~amd64
+# required by virtual/dist-kernel-5.15.159::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-5.15.159 ~amd64
+# required by virtual/dist-kernel-5.10.218::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-5.10.218 ~amd64
+# required by sys-kernel/linux-firmware-99999999::gentoo[dist-kernel]
+# required by @selected
+# required by @world (argument)
+=virtual/dist-kernel-5.10.218 ~amd64
+# required by virtual/dist-kernel-5.10.217::gentoo
+# required by sys-fs/zfs-2.2.3::gentoo[dist-kernel]
+# required by sys-fs/zfs-kmod-2.2.3::gentoo[dist-kernel]
+=sys-kernel/gentoo-kernel-5.10.217 ~amd64
+# required by sys-kernel/gentoo-kernel-5.10.217::gentoo
+=virtual/dist-kernel-5.10.217 ~amd64
+# required by sys-fs/zfs-2.2.2-r1::gentoo
+# required by zfs (argument)
+=sys-fs/zfs-kmod-2.2.2-r1 ~amd64
+# required by tremc (argument)
+=net-p2p/tremc-0.9.3_p20230506 ~amd64
+# required by =games-action/prismlauncher-9999 (argument)
+=games-action/prismlauncher-9999 **
+# required by lingot (argument)
+=media-sound/lingot-1.1.1 ~amd64
+# required by openoffice-bin (argument)
+=app-office/openoffice-bin-4.1.15 ~amd64
+# required by dev-libs/tree-sitter-bash-0.21.0-r1::gentoo[python]
+# required by dev-libs/tree-sitter-meta-1-r4::gentoo
+# required by tree-sitter-meta (argument)
+=dev-python/setuptools-70.0.0 ~amd64
+# required by syncplay (argument)
+=media-video/syncplay-1.7.3 ~amd64
+# required by go-yq-bin (argument)
+=app-misc/go-yq-bin-4.44.1 ~amd64
+# required by netdiscover (argument)
+=net-analyzer/netdiscover-0.7 ~amd64
+# required by net-misc/socat-1.7.4.4-r1::gentoo
+# required by @selected
+# required by @world (argument)
+=sys-libs/readline-9999 **
+# required by media-gfx/fontforge-20230101-r2::gentoo[-test,readline]
+# required by @selected
+# required by @world (argument)
+=sys-libs/readline-8.3_alpha **
+# required by net-analyzer/speedtest-cli-2.1.3-r2::gentoo
+# required by speedtest-cli (argument)
+=dev-python/setuptools-71.0.3 ~amd64
+# required by net-analyzer/speedtest-cli-2.1.3-r2::gentoo
+# required by speedtest-cli (argument)
+=dev-python/setuptools-71.0.0 ~amd64
+# required by net-analyzer/speedtest-cli-2.1.3-r2::gentoo
+# required by speedtest-cli (argument)
+=dev-python/setuptools-70.3.0 ~amd64
+# required by net-analyzer/speedtest-cli-2.1.3-r2::gentoo
+# required by speedtest-cli (argument)
+=dev-python/setuptools-70.2.0-r1 ~amd64
+# required by =jdk-21 (argument)
+=virtual/jdk-21 ~amd64
+# required by virtual/jdk-21::gentoo
+# required by =jdk-21 (argument)
+=dev-java/openjdk-bin-21.0.3_p9-r1 ~amd64
