@@ -63,7 +63,7 @@ tests() {
 
 DISK="$1"
 # TODO filter out duplicates
-DISK="${DISK:=$(find /dev/disk/by-id -not -name '*-part*' -not -type d | umenu -d "Select the disk to format")}"
+DISK="${DISK:=$(disk-select.sh)}"
 
 #I don't suppose any of you guys know a way to do ansi escape codes that isn't annoying to read and to write
 echo [1mselected disk is [0m[34m[1m$DISK[0m[1m$(readlink "$DISK">/dev/null && echo , a.k.a. [0m[34m[1m$(readlink -e $DISK))[0m
