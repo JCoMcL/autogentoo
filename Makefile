@@ -1,25 +1,18 @@
-#include targets/facts.mk
-
-GENTOO_ARCH = $(subst x86_64,amd64 $(ARCH))
-
-SAVE_0 = scripts/fake-savevm.sh
-SAVE_1 = scripts/savevm.sh
-
+#include targets/options.mk
 
 target:
 	ln -sf $$(find targets -mindepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
 
 target/ssh-wrapper/ssh: target
+	${MAKE} -C target ssh-wrapper/ssh
 
-boot.iso:
-	scripts/download-files.sh https://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-install-$(GENTOO_ARCH)-minimal iso
-	mv *.iso $@
 
-sshpass-wrapper/ssh: | sshpass-wrapper/
+sshpass-wrapper/ssh: | target/ssh-wrapper
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
 ssh-wrapper/ssh: | ssh-wrapper/
+	ln -sfr $< $@
 	echo -e "#!/usr/bin/env sh\n$$(which ssh) -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
@@ -28,7 +21,7 @@ portage-setup:
 	rsync -irv portage/* /etc/portage
 
 ssh/key: | ssh/
-	ssh-keygen -t ed25519 -qN '' -f $@
+	ssh-keygen -t ed25519 -qN '' -f $@ -C "TEMPORARY AUTOGENTOO KEY"
 ssh/key.pub: ssh/key
 
 stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd

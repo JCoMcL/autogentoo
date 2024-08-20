@@ -26,7 +26,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${QEMU} -cdrom boot.iso -boot once=d -drive file=img1.cow,format=qcow2
 	$(info Once the system has booted and is in an interactive state, press ENTER to continue)
 	read
-	$(SAVE_1) $(@F) #FIXME logics breaks unless this if this is a fake save
+	$(SAVE_1) $(@F) #FIXME logics breaks if this is a fake save
 
 stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
