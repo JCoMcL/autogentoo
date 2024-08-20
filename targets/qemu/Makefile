@@ -1,11 +1,6 @@
 DISK_SIZE = 10G
 MEM = 2G
 
-ARCH = x86_64
-GENTOO_ARCH = $(subst x86_64,amd64 $(ARCH))
-HOST_SSH_PORT = 60022
-INITIAL_PASSWD = root
-
 SAVE_0 = scripts/fake-savevm.sh
 SAVE_1 = scripts/savevm.sh
 
@@ -21,6 +16,10 @@ img1.cow: blank.raw
 
 sendkeys.rb:
 	curl https://raw.githubusercontent.com/mvidner/sendkeys/master/sendkeys | install -m 555 /dev/stdin $@
+
+boot.iso:
+	scripts/download-files.sh https://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-install-$(GENTOO_ARCH)-minimal iso
+	mv *.iso $@
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
@@ -74,4 +73,4 @@ and-then-boot: stages/05-reboot OVMF_CODE.fd OVMF_VARS.fd
 	  -drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd \
 clean:
 	${MAKE} stop
-	rm -rf blank.raw img1.cow stages ansible/host sendkeys.rb qemu.lock qemu.sock qemu.pid *.fd #boot.iso
+	rm -rf blank.raw img1.cow stages ansible/host qemu.lock qemu.sock qemu.pid *.fd #boot.iso

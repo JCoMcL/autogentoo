@@ -1,4 +1,5 @@
-include target/facts.mk
+#include targets/facts.mk
+
 GENTOO_ARCH = $(subst x86_64,amd64 $(ARCH))
 
 SAVE_0 = scripts/fake-savevm.sh
@@ -7,6 +8,8 @@ SAVE_1 = scripts/savevm.sh
 
 target:
 	ln -sf $$(find targets -mindepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
+
+target/ssh-wrapper/ssh: target
 
 boot.iso:
 	scripts/download-files.sh https://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-install-$(GENTOO_ARCH)-minimal iso
@@ -60,6 +63,6 @@ stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3.ta
 
 
 clean:
-	rm -rf stages ssh sshpass-wrapper ansible/host #boot.iso
+	rm -rf stages ssh sshpass-wrapper ansible/host target #boot.iso
 
 .PHONY: clean reset currently-running not-currently-running
