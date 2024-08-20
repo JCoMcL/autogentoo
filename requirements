@@ -1,6 +1,5 @@
 openssh
 sshpass
-# virtualisation
 wget
 qemu
 socat
@@ -10,3 +9,4 @@ lynx
 ansible
 OVMF
 dosfstool
+umenu
