@@ -10,9 +10,10 @@ MEM = 2G
 SAVE_0 = scripts/fake-savevm.sh
 SAVE_1 = scripts/savevm.sh
 
-QEMU = qemu-system-${ARCH} -pidfuile qemu.pid --enable-kvm -m ${MEM} -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
+QEMU = qemu-system-${ARCH} -pidfile qemu.pid --enable-kvm -m ${MEM} -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 include ../common.mk
+include options.mk
 
 blank.raw:
 	qemu-img create -f raw $@ ${DISK_SIZE}
@@ -27,17 +28,22 @@ boot.iso:
 	scripts/download-files.sh https://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-install-$(GENTOO_ARCH)-minimal iso
 	mv *.iso $@
 
+ssh-wrapper/ssh: | ssh-wrapper/ stages/01-sshd
+	ln -sfr $< $@
+	echo -e "#!/usr/bin/env sh\n$$(which ssh) -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
+	chmod +x $@
+
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
-	${QEMU} -cdrom boot.iso -boot once=d -drive file=img1.cow,format=qcow2
-	$(info Once the system has booted and is in an interactive state, press ENTER to continue)
+	${QEMU} -cdrom boot.iso -boot once=d -drive file=img1.cow,format=qcow2 &
+	$(info "Once the system has booted and is in an interactive state, press ENTER to continue")
 	read
 	$(SAVE_1) $(@F) #FIXME logics breaks if this is a fake save
 
-stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
+stages/01-sshd: stages/00-interactive sendkeys.rb
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
-	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
+	while ! sshpass -p ${INITIAL_PASSWD} root@127.0.0.1:${HOST_SSH_PORT} true; do sleep 3; done
 	$(SAVE_0) $(@F)
 
 not-currently-running:
@@ -52,7 +58,7 @@ $(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
 		$< ;\
 	else\
-		${QEMU} -cdrom boot.iso img1.cow -loadvm $*;\
+		${QEMU} -cdrom boot.iso img1.cow -loadvm $* &;\
 	fi
 	sleep 3 #FIXME
 
@@ -77,6 +83,7 @@ and-then-boot: stages/05-reboot OVMF_CODE.fd OVMF_VARS.fd
 	  -global driver=cfi.pflash01,property=secure,value=on \
 	  -drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on \
 	  -drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd \
+
 clean:
 	${MAKE} stop
 	rm -rf blank.raw img1.cow stages ansible/host qemu.lock qemu.sock qemu.pid *.fd #boot.iso

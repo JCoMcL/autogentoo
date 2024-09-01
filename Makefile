@@ -4,23 +4,21 @@
 #| |__| (_) | | |  __/ | |  | | (_| |   <  __/  _| | |  __/
 # \____\___/|_|  \___| |_|  |_|\__,_|_|\_\___|_| |_|_|\___|
 
-#include targets/options.mk
+include options.mk
+
+default: target/ssh-wrapper/ssh
 
 target:
 	ln -sf $$(find targets -mindepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
+	ln -sfr options.mk $@/options.mk
 
 target/ssh-wrapper/ssh: target
 	${MAKE} -C target ssh-wrapper/ssh
 
-
-sshpass-wrapper/ssh: | target/ssh-wrapper
+sshpass-wrapper/ssh: | target/ssh-wrapper/ssh
 	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
 	chmod +x $@
 
-ssh-wrapper/ssh: | ssh-wrapper/
-	ln -sfr $< $@
-	echo -e "#!/usr/bin/env sh\n$$(which ssh) -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
-	chmod +x $@
 
 #system-level setup required if running on Gentoo
 portage-setup:
@@ -30,8 +28,7 @@ ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@ -C "TEMPORARY AUTOGENTOO KEY"
 ssh/key.pub: ssh/key
 
-stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh stages/01-sshd
-	${MAKE} resume-01-sshd
+stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
 	$(SAVE_1) $(@F)
 
