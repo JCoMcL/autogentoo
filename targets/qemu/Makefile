@@ -10,13 +10,15 @@ MEM = 2G
 SAVE_0 = scripts/fake-savevm.sh
 SAVE_1 = scripts/savevm.sh
 
-QEMU = qemu-system-${ARCH} -pidfile qemu.pid --enable-kvm -m ${MEM} -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
+QEMU = qemu-system-${ARCH} -pidfile qemu.pid --enable-kvm -m ${MEM} -nic user,hostfwd=tcp::${SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 include ../common.mk
 
 include options.mk
 #override defaults
 SSH_PORT=60022
+
+ssh-wrapper/ssh: stages/02-ssh-key
 
 blank.raw:
 	qemu-img create -f raw $@ ${DISK_SIZE}
@@ -38,11 +40,16 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	read
 	$(SAVE_1) $(@F) #FIXME logics breaks if this is a fake save
 
-stages/01-sshd: stages/00-interactive sendkeys.rb
+stages/01-sshd: stages/00-interactive sendkeys.rb sshpass-wrapper/ssh
 	${MAKE} resume-00-interactive
 	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
-	while ! sshpass -p ${INITIAL_PASSWD} root@127.0.0.1:${HOST_SSH_PORT} true; do sleep 3; done
+	while ! sshpass-wrapper/ssh qemu true; do sleep 3; done
 	$(SAVE_0) $(@F)
+
+stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh
+	${MAKE} resume-01-sshd
+	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< qemu
+	$(SAVE_1) $(@F)
 
 not-currently-running:
 	! ${MAKE} currently-running
@@ -56,7 +63,7 @@ $(RESUME): resume-%: stages/%
 	if ${MAKE} currently-running ; then\
 		$< ;\
 	else\
-		${QEMU} -cdrom boot.iso img1.cow -loadvm $* &;\
+		${QEMU} -cdrom boot.iso img1.cow -loadvm $* & \
 	fi
 	sleep 3 #FIXME
 
