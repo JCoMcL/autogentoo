@@ -15,11 +15,6 @@ target:
 target/ssh-wrapper/ssh: target
 	${MAKE} -C target ssh-wrapper/ssh
 
-sshpass-wrapper/ssh: | target/ssh-wrapper/ssh
-	echo -e "#!/usr/bin/env sh\nsshpass -p ${INITIAL_PASSWD} $$(which ssh) -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
-	chmod +x $@
-
-
 #system-level setup required if running on Gentoo
 portage-setup:
 	rsync -irv portage/* /etc/portage

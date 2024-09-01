@@ -18,11 +18,13 @@ target
 stages/
 ssh-wrapper
 sshpass-wrapper
+ssh/
 targets/*/stages
 targets/*/ssh-wrapper
 targets/*/ sshpass-wrapper
+ssh/*/ssh/
+targets/*/options.mk
 
 ansible/host
-ssh/
 
 targets/qemu/sendkeys.rb

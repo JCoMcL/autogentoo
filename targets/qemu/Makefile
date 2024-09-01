@@ -13,7 +13,10 @@ SAVE_1 = scripts/savevm.sh
 QEMU = qemu-system-${ARCH} -pidfile qemu.pid --enable-kvm -m ${MEM} -nic user,hostfwd=tcp::${HOST_SSH_PORT}-:22 -monitor unix:qemu.sock,server,nowait
 
 include ../common.mk
+
 include options.mk
+#override defaults
+SSH_PORT=60022
 
 blank.raw:
 	qemu-img create -f raw $@ ${DISK_SIZE}
@@ -27,11 +30,6 @@ sendkeys.rb:
 boot.iso:
 	scripts/download-files.sh https://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-install-$(GENTOO_ARCH)-minimal iso
 	mv *.iso $@
-
-ssh-wrapper/ssh: | ssh-wrapper/ stages/01-sshd
-	ln -sfr $< $@
-	echo -e "#!/usr/bin/env sh\n$$(which ssh) -p ${HOST_SSH_PORT} -o IdentityFile=ssh/key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '$$@' > $@
-	chmod +x $@
 
 stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${MAKE} not-currently-running || ${MAKE} stop
