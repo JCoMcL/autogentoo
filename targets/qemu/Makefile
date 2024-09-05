@@ -46,9 +46,9 @@ stages/01-sshd: stages/00-interactive sendkeys.rb sshpass-wrapper/ssh
 	while ! sshpass-wrapper/ssh qemu true; do sleep 3; done
 	$(SAVE_0) $(@F)
 
-stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh
+stages/02-ssh-key: stages/01-sshd ssh/key.pub sshpass-wrapper/ssh
 	${MAKE} resume-01-sshd
-	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< qemu
+	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i ssh/key.pub qemu
 	$(SAVE_1) $(@F)
 
 not-currently-running:

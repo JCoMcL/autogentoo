@@ -9,7 +9,7 @@ include options.mk
 default: target/ssh-wrapper/ssh
 
 target:
-	ln -sf $$(find targets -mindepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
+	ln -sf $$(find targets -mindepth 1 -maxdepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
 	ln -sfr options.mk $@/options.mk
 
 target/ssh-wrapper/ssh: target
@@ -19,13 +19,6 @@ target/ssh-wrapper/ssh: target
 portage-setup:
 	rsync -irv portage/* /etc/portage
 
-ssh/key: | ssh/
-	ssh-keygen -t ed25519 -qN '' -f $@ -C "TEMPORARY AUTOGENTOO KEY"
-ssh/key.pub: ssh/key
-
-stages/02-ssh-key: ssh/key.pub sshpass-wrapper/ssh
-	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i $< -p ${HOST_SSH_PORT} root@127.0.0.1
-	$(SAVE_1) $(@F)
 
 stage3.tar.xz:
 	scripts/download-files.sh http://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-stage3-$(GENTOO_ARCH)-openrc xz sha256

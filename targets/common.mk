@@ -1,18 +1,23 @@
 %/:
 	mkdir -p $@
 
-# This is broken and will need to be redone using Make's "define". ONESHELL is more destructive than I thought and so a heredoc won't really work
+include options.mk
+
+define SSH_CONFIG
+Host $(notdir $(CURDIR))
+:	Hostname ${SSH_ADDRESS}$(if ${SSH_PORT},
+:	Port ${SSH_PORT})
+:	User ${SSH_USER}
+:	StrictHostKeyChecking no
+:	IdentityFile $(shell realpath ssh/key)
+endef
+# The colons are to preserve the whitespace, they are removed with sed afterwards
+
 ssh/config: options.mk | ssh/key
-	#      insert indendation ⮧            ⮦ remove blank lines
-	cat <<EOF | sed -e 's/^_/   /' -e '/^$$/d' > $@
-	Host $$(basename $$(realpath .))
-	_Hostname ${SSH_ADDRESS}
-	$$(test -n "${SSH_PORT}" && echo Port ${SSH_PORT})
-	_User ${SSH_USER}
-	_UserKnownHostsFile /dev/null
-	_StrictHostKeyChecking no
-	_IdentityFile $$(realpath ssh/key)
-	EOF
+	$(shell cat <<-EOF | sed s/^://> ssh_config
+	${SSH_CONFIG}
+	EOF)
+	cat ssh_config
 
 ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@ -C "TEMPORARY AUTOGENTOO KEY"
