@@ -25,28 +25,22 @@ stage3.tar.xz:
 	sha256sum --check stage3-$(GENTOO_ARCH)-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
 	ln -sf stage3-$(GENTOO_ARCH)-openrc-*.tar.xz $@
 
-#ANSIBLE SECTION
-
 ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
 stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3.tar.xz
 	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
-	$(SAVE_0) $(@F)
 
 stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3.tar.xz
 	${MAKE} resume-03-system-unpacked
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
-	$(SAVE_1) $(@F)
 
 stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3.tar.xz
 	${MAKE} resume-04-unnamed-stage
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
-	$(SAVE_1) $(@F)
-
 
 clean:
-	rm -rf stages ssh sshpass-wrapper ansible/host target #boot.iso
+	rm -rf stages ssh sshpass-wrapper ansible/host target
 
 .PHONY: clean reset currently-running not-currently-running

@@ -38,7 +38,7 @@ stages/00-interactive: boot.iso sendkeys.rb | img1.cow stages/
 	${QEMU} -cdrom boot.iso -boot once=d -drive file=img1.cow,format=qcow2 &
 	$(info "Once the system has booted and is in an interactive state, press ENTER to continue")
 	read
-	$(SAVE_1) $(@F) #FIXME logics breaks if this is a fake save
+	$(SAVE_1) $(@F) #FIXME logic breaks if this is a fake save
 
 stages/01-sshd: stages/00-interactive sendkeys.rb sshpass-wrapper/ssh
 	${MAKE} resume-00-interactive
@@ -55,8 +55,8 @@ not-currently-running:
 	! ${MAKE} currently-running
 
 currently-running:
-	test -f qemu.pid && ps h -o cmd -p `<qemu.pid` | grep qemu
-	#test -S qemu.sock
+	test -f qemu.pid && ps h -o cmd -p `<qemu.pid` | grep qemu || \
+	test -S qemu.sock
 
 RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
 $(RESUME): resume-%: stages/%
@@ -74,7 +74,6 @@ stop:
 	if ${MAKE} currently-running; then\
 		if ! timeout 5 scripts/qemu-cmd.sh quit; then\
 			kill `<qemu.pid`;\
-			rm -f qemu.pid ;\
 		fi;\
 	fi
 
@@ -91,4 +90,4 @@ and-then-boot: stages/05-reboot OVMF_CODE.fd OVMF_VARS.fd
 
 clean:
 	${MAKE} stop
-	rm -rf blank.raw img1.cow stages ansible/host qemu.lock qemu.sock qemu.pid *.fd #boot.iso
+	rm -rf blank.raw img1.cow stages ansible/host qemu.lock qemu.sock *.fd #boot.iso
