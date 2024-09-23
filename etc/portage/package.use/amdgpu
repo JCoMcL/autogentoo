@@ -1,2 +1,2 @@
-*/* vaapi vdpau vulkan opencl osl opengl glslang libpacebo
+*/* vaapi vdpau vulkan opencl osl opengl glslang libpacebo video_cards_radeon rocm
 media-libs/mesa zink vulkan-overlay d3d9 xa
