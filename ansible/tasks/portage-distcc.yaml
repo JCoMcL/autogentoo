@@ -1,0 +1,7 @@
+- name: Install distcc and ensure latest compiler toolchain for compatibility
+  package:
+    name:
+      - distcc
+      - binutils
+      - gcc
+    state: latest
