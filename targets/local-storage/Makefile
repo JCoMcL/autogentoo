@@ -1,56 +1,26 @@
-include ../facts.mk
+# _                    _   ____  _
+#| |    ___   ___ __ _| | / ___|| |_ ___  _ __ __ _  __ _  ___
+#| |   / _ \ / __/ _` | | \___ \| __/ _ \| '__/ _` |/ _` |/ _ \
+#| |__| (_) | (_| (_| | |  ___) | || (_) | | | (_| | (_| |  __/
+#|_____\___/ \___\__,_|_| |____/ \__\___/|_|  \__,_|\__, |\___|
+#                                                   |___/
+
+include options.mk
 include ../common.mk
 
-# TODO add abstraction for systemd and runit
-sshd:
-	rc-service sshd status | grep  started  >/dev/null || \
-		exit 1 # sshd is not started, you can start it with the following command: rc-service sshd start
+checkpoints/01-linux-machine: checkpoints/
+	touch $@
+checkpoints/02-keyboard-access: checkpoints/01-linux-machine
+	touch $@
+checkpoints/03-ssh-shell: checkpoints/02-keyboard-access sshd
+	touch $@
+checkpoints/04-passwordless-ssh-shell: checkpoints/03-ssh-shell ssh/-wrapper/ssh
 	ssh localhost true || \
-		exit 1 # can't ssh to localhost, you can likely fix this with the following command: ssh-copy-id localhost
+		exit 1 # can't ssh to localhost, you can likely fix this with the following command: `ssh-copy-id localhost`
+	touch $@
+checkpoints/05-disk-access:
+	echo $(disk)
 
-ssh-wrapper/ssh: sshd
-	rc-service sshd status | grep started
-
-stages/01-sshd: sshpass-wrapper/ssh stages/00-interactive sendkeys.rb
-	${MAKE} resume-00-interactive
-	./sendkeys.rb 'passwd<ret><delay>${INITIAL_PASSWD}<ret>${INITIAL_PASSWD}<ret><delay>rc-service sshd start<ret>' | socat - ./qemu.sock
-	while ! $< -p ${HOST_SSH_PORT} root@127.0.0.1 true; do sleep 3; done
-	$(SAVE_0) $(@F)
-
-not-currently-running:
-	! ${MAKE} currently-running
-
-currently-running:
-	test -f qemu.pid && ps h -o cmd -p `<qemu.pid` | grep qemu
-	#test -S qemu.sock
-
-RESUME = $(patsubst stages/%,resume-%,$(wildcard stages/*))
-$(RESUME): resume-%: stages/%
-	if ${MAKE} currently-running ; then\
-		$< ;\
-	else\
-		${QEMU} -cdrom boot.iso img1.cow -loadvm $* & echo $$! > qemu.pid;\
-	fi
-	sleep 3 #FIXME
-
-resume: not-currently-running | stages/00-interactive
-	${MAKE} resume-`ls stages | tail -n 1`
-
-stop:
-	if ${MAKE} currently-running; then\
-		if ! timeout 5 scripts/qemu-cmd.sh quit; then\
-			kill `<qemu.pid`;\
-			rm qemu.pid ;\
-		fi;\
-	fi
-
-and-then-boot: stages/05-reboot OVMF_CODE.fd OVMF_VARS.fd
-	${MAKE} stop
-	${QEMU} img1.cow\
-	  -machine q35,smm=on,accel=kvm \
-	  -global driver=cfi.pflash01,property=secure,value=on \
-	  -drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on \
-	  -drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd \
 clean:
-	${MAKE} stop
-	rm -rf blank.raw img1.cow stages ansible/host sendkeys.rb qemu.lock qemu.sock qemu.pid *.fd #boot.iso
+	rm -rf ssh ssh-wrapper options.mk
+

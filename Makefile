@@ -41,6 +41,7 @@ stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3.ta
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
 
 clean:
-	rm -rf stages ssh sshpass-wrapper ansible/host target
+	$(MAKE) -C target clean
+	rm -rf target
 
 .PHONY: clean reset currently-running not-currently-running
