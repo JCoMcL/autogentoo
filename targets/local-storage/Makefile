@@ -24,7 +24,7 @@ checkpoints/04-passwordless-ssh: checkpoints/03-ssh
 		exit 1 # can't ssh to localhost, you can likely fix this with the following command: `ssh-copy-id localhost`
 	touch $@
 checkpoints/05-disk-access: checkpoints/04-passwordless-ssh
-	if [ -$(disk)
+	ln -sf `scripts/select-disk.sh --try-first "$(disk)" --additional-options local.img` $@
 
 clean:
 	rm -rf ssh ssh-wrapper options.mk
