@@ -6,11 +6,14 @@
 
 include options.mk
 
-default: target/ssh-wrapper/ssh
+default: target/checkpoints/05-disk-access
 
 target:
 	ln -sf $$(find targets -mindepth 1 -maxdepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
 	ln -sfr options.mk $@/options.mk
+
+target/%: target
+	rule=$@; $(MAKE) -C target $${rule#target/}
 
 target/ssh-wrapper/ssh: target
 	${MAKE} -C target ssh-wrapper/ssh

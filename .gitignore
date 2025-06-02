@@ -19,10 +19,11 @@ stages/
 ssh-wrapper
 sshpass-wrapper
 ssh/
-targets/*/stages
+ssh/*/ssh/
+
+targets/*/checkpoints
 targets/*/ssh-wrapper
 targets/*/ sshpass-wrapper
-ssh/*/ssh/
 targets/*/options.mk
 
 ansible/host
