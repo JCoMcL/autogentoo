@@ -5,19 +5,16 @@ include options.mk
 
 define SSH_CONFIG
 Host $(notdir $(CURDIR))
-:	Hostname ${SSH_ADDRESS}$(if ${SSH_PORT},
-:	Port ${SSH_PORT})
-:	User ${SSH_USER}
-:	StrictHostKeyChecking no
-:	IdentityFile $(shell realpath ssh/key)
+\\n	Hostname ${SSH_ADDRESS}
+$(if ${SSH_PORT},
+\\n	Port ${SSH_PORT})
+\\n	User ${SSH_USER}
+\\n	StrictHostKeyChecking no
+\\n	IdentityFile $(shell realpath ssh/key)
 endef
-# The colons are to preserve the whitespace, they are removed with sed afterwards
 
 ssh/config: options.mk | ssh/key
-	$(shell cat <<-EOF | sed s/^://> ssh_config
-	${SSH_CONFIG}
-	EOF)
-	cat ssh_config
+	$(shell echo -ne ${SSH_CONFIG} > $@)
 
 ssh/key: | ssh/
 	ssh-keygen -t ed25519 -qN '' -f $@ -C "TEMPORARY AUTOGENTOO KEY"
