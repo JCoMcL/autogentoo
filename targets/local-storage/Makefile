@@ -23,8 +23,13 @@ checkpoints/04-passwordless-ssh: checkpoints/03-ssh
 	ssh localhost true || \
 		exit 1 # can't ssh to localhost, you can likely fix this with the following command: `ssh-copy-id localhost`
 	touch $@
+
+local.img:
+	dd if=/dev/zero of=$@ iflag=fullblock bs=1M count=1 && sync
+
 checkpoints/05-disk-access: checkpoints/04-passwordless-ssh
-	ln -sf `scripts/select-disk.sh --try-first "$(disk)" --additional-options local.img` $@
+	ln -sfr `scripts/select-disk.sh --try-first "$(disk)" --additional-options local.img` $@
+	$(MAKE)
 
 clean:
 	rm -rf ssh ssh-wrapper options.mk

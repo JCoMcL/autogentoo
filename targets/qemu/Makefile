@@ -4,8 +4,6 @@
 #| |_| | |___| |  | | |_| | | |  | | (_| |   <  __/  _| | |  __/
 # \__\_\_____|_|  |_|\___/  |_|  |_|\__,_|_|\_\___|_| |_|_|\___|
 
-DISK_SIZE = 10G
-MEM = 2G
 
 SAVE_0 = scripts/fake-savevm.sh
 SAVE_1 = scripts/savevm.sh
@@ -50,6 +48,10 @@ stages/02-ssh-key: stages/01-sshd ssh/key.pub sshpass-wrapper/ssh
 	${MAKE} resume-01-sshd
 	env PATH="sshpass-wrapper:$$PATH" ssh-copy-id -i ssh/key.pub qemu
 	$(SAVE_1) $(@F)
+
+.PHONY: await-ssh
+await-ssh: stages/02-ssh-key
+	${MAKE} resume
 
 not-currently-running:
 	! ${MAKE} currently-running

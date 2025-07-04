@@ -12,6 +12,7 @@
 *.pid
 *.fd
 *.xz
+*.img
 
 target
 
