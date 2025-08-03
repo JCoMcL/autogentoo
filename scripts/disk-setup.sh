@@ -20,7 +20,7 @@ get_part_via_appending_number() {
 		*) error "$label not recognised as a partition name"; return 1
 	esac)|| return 1
 	pre=$(case $disk in
-		/dev/nvme*) echo -n 'p' ;;
+		/dev/nvme*|/dev/loop*) echo -n 'p' ;;
 	esac)
 	ls "$disk$pre$num"
 }

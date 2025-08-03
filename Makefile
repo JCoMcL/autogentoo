@@ -5,8 +5,9 @@
 # \____\___/|_|  \___| |_|  |_|\__,_|_|\_\___|_| |_|_|\___|
 
 include options.mk
+export PATH := $(abspath scripts):$(PATH)
 
-default: target/checkpoints/05-disk-access
+default: target/checkpoints/06-formatted-disk
 
 target:
 	ln -sf $$(find targets -mindepth 1 -maxdepth 1 -type d | umenu -sd 'Which type of target are we deploying to?') $@
@@ -17,6 +18,9 @@ target/%: target
 
 target/ssh-wrapper/ssh: target
 	${MAKE} -C target ssh-wrapper/ssh
+
+target/checkpoints/06-formatted-disk: target/checkpoints/05-disk-access
+	scripts/disk-setup.sh $<
 
 #system-level setup required if running on Gentoo
 portage-setup:
@@ -44,6 +48,7 @@ stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3.ta
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
 
 clean:
+	ln -sfr options.mk target/options.mk
 	$(MAKE) -C target clean
 	rm -rf target
 
