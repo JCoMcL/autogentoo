@@ -25,12 +25,16 @@ checkpoints/04-passwordless-ssh: checkpoints/03-ssh
 	touch $@
 
 local.img:
-	dd if=/dev/zero of=$@ iflag=fullblock bs=1M count=1 && sync
+	create-local-img.sh $@ $(VIRTUAL_DISK_SIZE)
+
+/dev/loop0: local.img
+	losetup --find --show --partscan $<
 
 checkpoints/05-disk-access: checkpoints/04-passwordless-ssh
-	ln -sfr `scripts/select-disk.sh --try-first "$(disk)" --additional-options local.img` $@
-	$(MAKE)
+	disk_choice="`select-disk.sh --try-first "$(disk)" --additional-options "/dev/loop0 (local virtual disk)"`" && \
+	if [ "$$disk_choice" = /dev/loop0 ]; then $(MAKE) /dev/loop0; fi && \
+	ln -sfr "$$disk_choice" $@
 
 clean:
-	rm -rf ssh ssh-wrapper options.mk
+	rm -rf ssh ssh-wrapper options.mk *.img
 
