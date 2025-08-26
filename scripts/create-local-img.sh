@@ -37,3 +37,5 @@ SIZE_MIB=$(to_mib "$2")
 set -x
 dd if=/dev/zero of="$IMG_FILE" iflag=fullblock bs=1M count="$SIZE_MIB" status=progress
 sync
+
+# losetup --find --show --partscan "$IMG_FILE"
