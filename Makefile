@@ -26,7 +26,6 @@ target/checkpoints/06-formatted-disk: target/checkpoints/05-disk-access
 portage-setup:
 	rsync -irv portage/* /etc/portage
 
-
 stage3.tar.xz:
 	scripts/download-files.sh http://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-stage3-$(GENTOO_ARCH)-openrc xz sha256
 	sha256sum --check stage3-$(GENTOO_ARCH)-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
@@ -35,7 +34,7 @@ stage3.tar.xz:
 ansible/host: ssh/key
 	echo "127.0.0.1:${HOST_SSH_PORT} ansible_user=root ansible_ssh_private_key_file=../$<" > $@
 
-stages/03-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3.tar.xz
+tagets/07-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3.tar.xz
 	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 

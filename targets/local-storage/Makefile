@@ -17,18 +17,18 @@ checkpoints/01-linux-machine: checkpoints/
 checkpoints/02-keyboard-access: checkpoints/01-linux-machine
 	touch $@
 checkpoints/03-ssh: checkpoints/02-keyboard-access
-	touch $@
+	ln -sfr `which ssh` $@
 
 checkpoints/04-passwordless-ssh: checkpoints/03-ssh
-	ssh localhost true || \
+	ssh -o BatchMode=yes localhost true || \
 		exit 1 # can't ssh to localhost, you can likely fix this with the following command: `ssh-copy-id localhost`
-	touch $@
+	ln -sfr $< $@
 
 local.img:
 	create-local-img.sh $@ $(VIRTUAL_DISK_SIZE)
 
 /dev/loop0: local.img
-	losetup --find --show --partscan $<
+	losetup --find --show --partscan $< #FIXME: this asumes there isn't an exisitng loop device
 
 checkpoints/05-disk-access: checkpoints/04-passwordless-ssh
 	disk_choice="`select-disk.sh --try-first "$(disk)" --additional-options "/dev/loop0 (local virtual disk)"`" && \
@@ -36,5 +36,5 @@ checkpoints/05-disk-access: checkpoints/04-passwordless-ssh
 	ln -sfr "$$disk_choice" $@
 
 clean:
-	rm -rf ssh ssh-wrapper options.mk *.img
+	rm -rf ssh ssh-wrapper options.mk *.img checkpoints
 
