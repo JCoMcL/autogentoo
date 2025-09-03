@@ -11,7 +11,7 @@ URL="$1"
 
 filter() {
     if [[ -n "$@" ]]; then
-        sed -nE "/$(printf '|%s$' $@ | cut -c 2-)/p"
+        grep -E "\.($(echo "$*" | tr ' ' '|'))$"
     else
         cat
     fi

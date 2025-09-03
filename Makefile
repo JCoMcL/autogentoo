@@ -26,9 +26,18 @@ target/checkpoints/06-formatted-disk: target/checkpoints/05-disk-access
 portage-setup:
 	rsync -irv portage/* /etc/portage
 
-stage3.tar.xz:
-	scripts/download-files.sh http://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-stage3-$(GENTOO_ARCH)-openrc xz sha256
-	sha256sum --check stage3-$(GENTOO_ARCH)-openrc-*.tar.xz.sha256 # don't know what good this does, they come from the same source
+.PHONY: gentoo-gpg-keys
+gentoo-gpg-keys:
+	if ls /usr/share/openpgp-keys/gentoo-release.asc; \
+	then gpg --import /usr/share/openpgp-keys/gentoo-release.asc; \
+	else gpg --keyserver hkps://keys.gentoo.org --recv-keys; \
+	fi
+
+stage3.tar.xz: gentoo-gpg-keys
+	scripts/download-files.sh http://distfiles.gentoo.org/releases/$(GENTOO_ARCH)/autobuilds/current-stage3-$(GENTOO_ARCH)-openrc asc xz sha256
+	ls *.asc | grep -v *.tar.xz | xargs rm -f # remove any .asc files that don't have a corresponding .tar.xz file
+	gpg --verify stage3-$(GENTOO_ARCH)-openrc-*.tar.xz.asc
+	sha256sum --check stage3-$(GENTOO_ARCH)-openrc-*.tar.xz.sha256
 	ln -sf stage3-$(GENTOO_ARCH)-openrc-*.tar.xz $@
 
 ansible/host: ssh/key
