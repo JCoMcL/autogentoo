@@ -91,4 +91,6 @@ mkfs.f2fs -f "`$get_partition root`"
 
 mkdir -p /mnt/gentoo
 mount "`$get_partition root`" /mnt/gentoo
+mkdir -p /mnt/gentoo/efi
+mount "`$get_partition boot`" /mnt/gentoo/efi
 

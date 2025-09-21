@@ -47,14 +47,6 @@ tagets/07-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3
 	${MAKE} resume-02-ssh-key
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 
-stages/04-unnamed-stage: stages/03-system-unpacked ansible/host ssh-wrapper/ssh stage3.tar.xz
-	${MAKE} resume-03-system-unpacked
-	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb2.yaml
-
-stages/05-reboot: stages/04-unnamed-stage ansible/host ssh-wrapper/ssh stage3.tar.xz
-	${MAKE} resume-04-unnamed-stage
-	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb3.yaml
-
 clean:
 	ln -sfr options.mk target/options.mk
 	$(MAKE) -C target clean

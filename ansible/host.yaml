@@ -1,8 +1,0 @@
-all:
-    hosts:
-        poweredge:
-            ansible_host: 192.168.8.2
-            ansible_port: 22
-            ansible_user: root
-            ansible_ssh_private_key_file: ../ssh/key
-            mac: e0:db:55:04:c1:64
