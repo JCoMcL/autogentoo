@@ -5,41 +5,20 @@ error() {
 	echo [0m[31m$@[0m >&2
 }
 
-get_part_via_appending_number() {
-	# I wouldn't trust this if I were you
-	if test -z "$DISK"; then
-		error "DISK is not set"
-		return 1
-	fi
-	disk="$(readlink -e $DISK)"
-
-	label="$1"
-	num=$(case "$label" in
-		boot) echo -n 1 ;;
-		root) echo -n 2 ;;
-		*) error "$label not recognised as a partition name"; return 1
-	esac)|| return 1
-	pre=$(case $disk in
-		/dev/nvme*|/dev/loop*) echo -n 'p' ;;
-	esac)
-	ls "$disk$pre$num"
+warn() {
+	echo "$@" >&2
 }
 
-get_part_via_partlabel() {
-	label="$1"
-	for retry in `seq 0.1 0.1 1`; do
-		ls "/dev/disk/by-partlabel/$label" 2>/dev/null && return
-		sleep $retry
-	done
-	error "failed to get disk '$label' via partlabel, attempting other method"
-	get_part_via_appending_number "$label"
+die() {
+	error $@
+	exit 1
 }
 
-get_partition="get_part_via_partlabel"
-if test -L /dev/disk/by-partlabel/boot ; then
-	error "/dev/disk/by-partlabel/boot already exists, falling back on naive method"
-	get_partition="get_part_via_appending_number"
-fi
+get_partition() {
+	label="$1"
+	lsblk -nr -o PATH,PARTLABEL "$DISK" |
+		awk -v l="$label" '$2 == l { print $1; exit }'
+}
 
 tests() {
 	set +e
@@ -59,38 +38,83 @@ tests() {
 	exit 0
 }
 
-#tests
+delay() {
+	echo [1mproceeding with format in:
+	seq 8 -1 1 | while read n; do echo -n "$n "; sleep 1; done
+	echo [0m
+}
 
-DISK="$1"
+ESP_SIZE="240"
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-h|--headless)
+			delay(){ :; }
+			DISK_SELECT_ARGS="$1"
+			shift
+			;;
+		-b|--boot-size)
+			shift
+			set -u; ESP_SIZE=$1; set +u
+			test $ESP_SIZE -gt 0 || die "--boot-size invalid argument: $1. Must be positive integer."
+			shift
+			;;
+		-n|--no-boot)
+			ESP_SIZE=
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
 # TODO filter out duplicates
-DISK="${DISK:=$(disk-select.sh)}"
+USER_DISK="${1:-$(disk-select.sh $DISK_SELECT_ARGS)}"
+DISK=$(readlink -f "$USER_DISK") || die "Could not find disk: $USER_DISK"
+test -b "$DISK" || die "$DISK not a block device"
 
 #I don't suppose any of you guys know a way to do ansi escape codes that isn't annoying to read and to write
 echo [1mselected disk is [0m[34m[1m$DISK[0m[1m$(readlink "$DISK">/dev/null && echo , a.k.a. [0m[34m[1m$(readlink -e $DISK))[0m
-echo [1mproceeding with format in:
-seq 8 -1 1 | while read n; do echo -n "$n "; sleep 1; done
-echo [0m
+delay
 
-set +e
-umount "`$get_partition root`"
-umount "`$get_partition boot`"
-set -e
+set -x
+lsblk -nr -o PATH,MOUNTPOINTS "$DISK" |
+while read dev mps; do
+	[ -z "$mps" ] && continue
+
+	for mp in $mps; do
+		case "$mp" in
+			/|/boot|/efi|/usr|/var|/home)
+				die "Refusing to unmount critical mountpoint: $mp"
+				;;
+		esac
+
+		warn "Unmounting $mp"
+		umount "$mp"
+	done
+done
 
 wipefs --all "$DISK"
 sfdisk "$DISK" << EOF
 label: gpt
 
-start=,size= 120M, type=U, name=boot
+${ESP_SIZE:+"start=,size= ${ESP_SIZE}M, type=U, name=boot"}
 start=,size= +, type=L, name=root
 EOF
 
 # TODO If using an SSD, should check for firmware upgrades
 
-mkfs.vfat -F 32 "`$get_partition boot`"
-mkfs.f2fs -f "`$get_partition root`"
-
+mkfs.f2fs -f "`get_partition root`"
 mkdir -p /mnt/gentoo
-mount "`$get_partition root`" /mnt/gentoo
-mkdir -p /mnt/gentoo/efi
-mount "`$get_partition boot`" /mnt/gentoo/efi
+mount "`get_partition root`" /mnt/gentoo
+
+if test -n "$ESP_SIZE"
+	then mkfs.vfat -F 32 "`get_partition boot`"
+	mkdir -p /mnt/gentoo/efi
+	mount "`get_partition boot`" /mnt/gentoo/efi
+fi
 
