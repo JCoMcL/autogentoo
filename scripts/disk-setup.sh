@@ -68,7 +68,7 @@ while [ $# -gt 0 ]; do
 		-f|--filesystem)
 			shift
 			set -u; FILESYSTEM=$1; set +u
-			command -v mkfs.$FILESYSTEM || die "can't support filesystem: $FILESYSTEM"
+			command -v mkfs.$FILESYSTEM >/dev/null || die "can't support filesystem: $FILESYSTEM"
 			shift
 			;;
 		-s|--swap-size)
@@ -125,8 +125,6 @@ while read dev mps; do
 	done
 done
 
-wipefs --all "$DISK"
-
 TOTAL_SECTORS=$(sectors $(blockdev --getsize64 "$DISK"))
 ESP_SECTORS=${ESP_SIZE:+$(sectors $ESP_SIZE)}
 SWAP_SECTORS=${SWAP:+$(sectors $SWAP)}
@@ -137,14 +135,14 @@ start=, size=${SWAP:+$((TOTAL_SECTORS - ESP_SECTORS - SWAP_SECTORS))}, type=L, n
 ${SWAP:+"start=, size=+, type=S, name=swap"}
 "
 
-echo "$DISK_LAYOUT" | sfdisk "$DISK"
+echo "$DISK_LAYOUT" | sfdisk -walways -Walways "$DISK"
 
 # Wait for changes to take effect
 partprobe "$DISK"
 udevadm settle
 
 # TODO If using an SSD, should check for firmware upgrades
-mkfs.$FILESYSTEM -f "`get_partition root`"
+mkfs.$FILESYSTEM "`get_partition root`"
 mkdir -p /mnt/gentoo
 mount "`get_partition root`" /mnt/gentoo
 
