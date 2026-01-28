@@ -5,7 +5,7 @@
 #|_____\___/ \___\__,_|_| |____/ \__\___/|_|  \__,_|\__, |\___|
 #                                                   |___/
 
-include options.mk
+include ../../options.mk
 include ../common.mk
 
 #TODO setting up localhost ssh should be delegated to something else e.g. `self` makefile
@@ -17,12 +17,12 @@ checkpoints/01-linux-machine: checkpoints/
 checkpoints/02-keyboard-access: checkpoints/01-linux-machine
 	touch $@
 checkpoints/03-ssh: checkpoints/02-keyboard-access
-	ln -sfr `which ssh` $@
+	ln -sf `which ssh` $@
 
 checkpoints/04-passwordless-ssh: checkpoints/03-ssh
 	ssh -o BatchMode=yes localhost true || \
 		exit 1 # can't ssh to localhost, you can likely fix this with the following command: `ssh-copy-id localhost`
-	ln -sfr $< $@
+	ln -sf $< $@
 
 local.img:
 	create-local-img.sh $@ $(VIRTUAL_DISK_SIZE)
@@ -33,8 +33,9 @@ local.img:
 checkpoints/05-disk-access: checkpoints/04-passwordless-ssh
 	disk_choice="`select-disk.sh --try-first "$(disk)" --additional-options "/dev/loop0 (local virtual disk)"`" && \
 	if [ "$$disk_choice" = /dev/loop0 ]; then $(MAKE) /dev/loop0; fi && \
-	ln -sfr "$$disk_choice" $@
+	ln -sf "$$disk_choice" $@
 
 clean:
 	rm -rf ssh ssh-wrapper options.mk *.img checkpoints
+	if mountpoint -q /mnt/gentoo; then umount -R /mnt/gentoo/; fi
 

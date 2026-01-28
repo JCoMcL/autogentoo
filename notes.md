@@ -3,7 +3,13 @@ The project has been influenced quite a lot by implementation details of QEMU. S
 |-|-|
 | SSH | ssh/config |
 
-
-
-So if we want to build on a local disk, we can skip the first 4 steps" Linux Machine, Kayboard Acess, SSH Shell, and Passwordless SSH. We can assume to already have those.
+So if we want to build on a local disk, we can skip the first 4 steps" Linux Machine, Keyboard Access, SSH Shell, and Passwordless SSH. We can assume to already have those.
 That said, it wouldn't hurt to check that we have all that stuff
+
+# Capabilities
+## memory
+CFLAGS -pipe, for systems with respectable amount of memory
+## cpu
+set up distcc, if high CPU offer distcc
+## available
+set up package repo

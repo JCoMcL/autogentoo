@@ -1,0 +1,19 @@
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Ensure /mnt/gentoo exists before continuing
+      stat:
+        path: /mnt/gentoo
+      register: gentoo_chroot
+
+    - name: Abort if /mnt/gentoo is missing
+      fail:
+        msg: "/mnt/gentoo does not exist, you have probably missed a step."
+      when: not gentoo_chroot.stat.exists
+
+    - name: Bootstrap Gentoo inside chroot
+      command: ls
+      vars:
+        ansible_connection: community.general.chroot
+        ansible_host: /mnt/gentoo
+        ansible_chroot_exe: arch-chroot

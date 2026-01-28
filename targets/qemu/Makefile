@@ -12,7 +12,7 @@ QEMU = qemu-system-${ARCH} -pidfile qemu.pid --enable-kvm -m ${MEM} -nic user,ho
 
 include ../common.mk
 
-include options.mk
+include ../../options.mk
 #override defaults
 SSH_PORT=60022
 

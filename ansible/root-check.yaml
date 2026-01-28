@@ -1,0 +1,5 @@
+- hosts: localhost
+  tasks:
+    - name: Who am I?
+      command: id -u
+      become: true
