@@ -6,6 +6,7 @@
 *.sock
 *.iso
 *.tar.xz
+*.tar.xz.asc
 *.tar.xz.sha256
 .*.kak.*
 *.lock

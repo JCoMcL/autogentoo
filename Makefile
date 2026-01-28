@@ -48,8 +48,12 @@ tagets/07-system-unpacked: stages/02-ssh-key ansible/host ssh-wrapper/ssh stage3
 	env PATH="ssh-wrapper:$(PATH)" ansible-playbook -i ansible/host -vvv ansible/pb.yaml
 
 clean:
-	ln -sfr options.mk target/options.mk
-	$(MAKE) -C target clean
+	for targ in targets/*/; do $(MAKE) -C $$targ clean || true; done
 	rm -rf target
+
+really-clean: clean
+	rm -f stage3*.tar.xz
+	rm -f stage3*.tar.xz.asc
+	rm -f stage3*.tar.xz.sha256
 
 .PHONY: clean reset currently-running not-currently-running
